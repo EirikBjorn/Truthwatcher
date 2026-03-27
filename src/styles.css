@@ -1,0 +1,212 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  background: #f4efe7;
+  color: #14231f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(126, 154, 140, 0.22), transparent 32rem),
+    linear-gradient(180deg, #f7f2ea 0%, #efe7dc 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(68rem, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.hero,
+.panel {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(20, 35, 31, 0.09);
+  border-radius: 1.25rem;
+  box-shadow: 0 1rem 3rem rgba(20, 35, 31, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: end;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero h1,
+.section-header h2,
+.progress-copy h3 {
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+}
+
+.hero h1,
+.section-header h2 {
+  margin: 0.25rem 0 0;
+}
+
+.lede,
+.status,
+.progress-copy p,
+.toggle {
+  color: #4a5e56;
+}
+
+.panel {
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.section-header {
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: #6b8077;
+}
+
+.primary-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  background: #183a32;
+  color: #fff;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.status {
+  margin: 0.75rem 0;
+}
+
+.error {
+  color: #8a2d2d;
+}
+
+.progress-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.progress-card {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(20, 35, 31, 0.08);
+}
+
+.progress-copy h3,
+.progress-copy p {
+  margin: 0;
+}
+
+.progress-bar {
+  height: 0.7rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #dbe5dd;
+  margin: 0.9rem 0;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #355f53, #8dad8f);
+}
+
+.toggle,
+.checklist-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.checklist {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.checklist-sections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.checklist-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.checklist-heading {
+  margin: 0;
+  font-size: 1rem;
+  color: #23332e;
+}
+
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  border: 1px solid rgba(20, 35, 31, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  color: #27423a;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #183a32;
+  color: #fff;
+  border-color: #183a32;
+}
+
+.checklist-item {
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid rgba(20, 35, 31, 0.08);
+}
+
+.checklist-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.checklist-meta {
+  font-size: 0.9rem;
+  color: #5a6d65;
+}
+
+@media (max-width: 720px) {
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary-button {
+    width: 100%;
+  }
+}
