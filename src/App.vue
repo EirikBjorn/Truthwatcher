@@ -291,7 +291,7 @@ watch(activeAppTab, (value) => {
               :disabled="notificationPermission !== 'granted'"
               @change="toggleProject(item.project_slug, $event.target.checked)"
             />
-            Notify me about {{ item.project }}
+            <span class="toggle-label">Notify me about {{ item.project }}</span>
           </label>
         </article>
       </div>
