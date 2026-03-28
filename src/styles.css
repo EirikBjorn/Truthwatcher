@@ -24,7 +24,7 @@ input {
 .app-shell {
   width: min(68rem, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 2rem 0 4rem;
+  padding: 2rem 0 7rem;
 }
 
 .hero,
@@ -198,6 +198,37 @@ input {
 .checklist-meta {
   font-size: 0.9rem;
   color: #5a6d65;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(30rem, calc(100vw - 2rem));
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(20, 35, 31, 0.09);
+  box-shadow: 0 1rem 2.5rem rgba(20, 35, 31, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.bottom-nav-button {
+  border: 0;
+  border-radius: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  color: #5a6d65;
+  cursor: pointer;
+}
+
+.bottom-nav-button.active {
+  background: #183a32;
+  color: #fff;
 }
 
 @media (max-width: 720px) {

@@ -14,12 +14,18 @@ const readingList = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 const checklistTabStorageKey = 'truthwatcher.checklistTab'
+const appTabStorageKey = 'truthwatcher.appTab'
 const notificationPermission = ref(
   typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
 )
 const currentSubscription = ref(null)
 const subscriptionMap = ref({})
 const activeChecklistTab = ref('publication')
+const activeAppTab = ref('tracker')
+const appTabs = [
+  { id: 'tracker', label: 'Tracker' },
+  { id: 'list', label: 'List' },
+]
 
 const completedBooks = computed(() =>
   readingList.value.filter((item) => item.completed).length,
@@ -59,9 +65,14 @@ const notificationSupported =
 onMounted(async () => {
   try {
     const savedChecklistTab = readSavedChecklistTab()
+    const savedAppTab = readSavedAppTab()
 
     if (savedChecklistTab) {
       activeChecklistTab.value = savedChecklistTab
+    }
+
+    if (savedAppTab) {
+      activeAppTab.value = savedAppTab
     }
 
     await Promise.all([loadProgress(), loadReadingList(), hydratePushState()])
@@ -175,6 +186,17 @@ function readSavedChecklistTab() {
   }
 }
 
+function readSavedAppTab() {
+  try {
+    const savedValue = window.localStorage.getItem(appTabStorageKey)
+    const validTabIds = new Set(appTabs.map((tab) => tab.id))
+
+    return validTabIds.has(savedValue) ? savedValue : null
+  } catch {
+    return null
+  }
+}
+
 function formatChecklistMeta(book) {
   if (activeChecklistTab.value === 'planet') {
     return `${book.type} · Publication #${book.publicationOrder}`
@@ -198,6 +220,14 @@ function urlBase64ToUint8Array(value) {
 watch(activeChecklistTab, (value) => {
   try {
     window.localStorage.setItem(checklistTabStorageKey, value)
+  } catch {
+    // Ignore storage failures and keep the in-memory selection.
+  }
+})
+
+watch(activeAppTab, (value) => {
+  try {
+    window.localStorage.setItem(appTabStorageKey, value)
   } catch {
     // Ignore storage failures and keep the in-memory selection.
   }
@@ -227,7 +257,7 @@ watch(activeChecklistTab, (value) => {
     <p v-if="errorMessage" class="status error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="status">Loading…</p>
 
-    <section class="panel">
+    <section v-if="activeAppTab === 'tracker'" class="panel">
       <div class="section-header">
         <div>
           <p class="eyebrow">Writing Progress</p>
@@ -259,7 +289,7 @@ watch(activeChecklistTab, (value) => {
       </div>
     </section>
 
-    <section class="panel">
+    <section v-else class="panel">
       <div class="section-header">
         <div>
           <p class="eyebrow">Reading Checklist</p>
@@ -296,5 +326,18 @@ watch(activeChecklistTab, (value) => {
         </section>
       </div>
     </section>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button
+        v-for="tab in appTabs"
+        :key="tab.id"
+        class="bottom-nav-button"
+        :class="{ active: activeAppTab === tab.id }"
+        type="button"
+        @click="activeAppTab = tab.id"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
   </main>
 </template>
