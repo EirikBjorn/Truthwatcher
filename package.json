@@ -10,7 +10,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "scrape:brando": "node --env-file=.env lib/scraper/brando.js"
+    "scrape:brando": "node --env-file=.env lib/scraper/brando.js",
+    "scrape:brando:ci": "node lib/scraper/brando.js",
+    "notify:test": "node --env-file=.env lib/notify/test.js",
+    "notify:test:ci": "node lib/notify/test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2",

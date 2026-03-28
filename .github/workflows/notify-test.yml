@@ -1,12 +1,10 @@
-name: Scrape Brandon Progress
+name: Test Push Notification
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'
 
 jobs:
-  scrape:
+  notify:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +17,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run scrape:brando:ci
+      - run: npm run notify:test:ci
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

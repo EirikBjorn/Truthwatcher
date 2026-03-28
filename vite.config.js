@@ -22,6 +22,13 @@ export default defineConfig({
         background_color: '#f4efe7',
         display: 'standalone',
         start_url: '/',
+        icons: [
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
       },
     }),
   ],
