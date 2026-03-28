@@ -4,6 +4,7 @@ export async function fetchLatestProgress() {
   const { data, error } = await supabase
     .from('writing_progress')
     .select('project_slug, project, progress, updated_at')
+    .eq('is_visible', true)
     .order('project_slug')
 
   if (error) {

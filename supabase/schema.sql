@@ -2,8 +2,12 @@ create table if not exists public.writing_progress (
   project_slug text primary key,
   project text not null,
   progress integer not null check (progress between 0 and 100),
+  is_visible boolean not null default true,
   updated_at timestamptz not null default now()
 );
+
+alter table public.writing_progress
+add column if not exists is_visible boolean not null default true;
 
 create table if not exists public.push_subscriptions (
   endpoint text primary key,

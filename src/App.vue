@@ -266,10 +266,18 @@ watch(activeAppTab, (value) => {
       </div>
 
       <div class="progress-grid">
-        <article v-for="item in progressItems" :key="item.project_slug" class="progress-card">
-          <div class="progress-copy">
-            <h3>{{ item.project }}</h3>
-            <p>{{ item.progress }}% complete</p>
+        <article
+          v-for="item in progressItems"
+          :key="item.project_slug"
+          class="progress-card"
+          :class="{ completed: item.progress === 100 }"
+        >
+          <div class="progress-heading">
+            <div class="progress-copy">
+              <h3>{{ item.project }}</h3>
+              <p>{{ item.progress }}% complete</p>
+            </div>
+            <span v-if="item.progress === 100" class="completion-pill">Complete</span>
           </div>
 
           <div class="progress-bar" aria-hidden="true">
