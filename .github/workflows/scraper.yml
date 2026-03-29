@@ -2,8 +2,9 @@ name: Scrape Brandon Progress
 
 on:
   workflow_dispatch:
-  #schedule:
-    #- cron: '0 */6 * * *'
+  schedule:
+    - cron: '0 9 * * *'
+    - cron: '0 21 * * *'
 
 jobs:
   scrape:
@@ -16,6 +17,13 @@ jobs:
         with:
           node-version: 24.14.0
           cache: npm
+
+      - name: Add schedule jitter
+        if: github.event_name == 'schedule'
+        run: |
+          DELAY_SECONDS=$((RANDOM % 7201))
+          echo "Sleeping for ${DELAY_SECONDS}s before scraping"
+          sleep "${DELAY_SECONDS}"
 
       - run: npm ci
 
