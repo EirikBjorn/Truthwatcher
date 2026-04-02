@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -17,34 +17,72 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24.14.0
-          cache: npm
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Install
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+      - name: Build production and dev site
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main dev
+
+          main_ref="origin/main"
+          dev_ref="origin/dev"
+          main_dir="$(mktemp -d)"
+          dev_dir="$(mktemp -d)"
+          site_dir="$GITHUB_WORKSPACE/site"
+
+          git worktree add "$main_dir" "$main_ref"
+          git worktree add "$dev_dir" "$dev_ref"
+
+          npm ci --prefix "$main_dir"
+          npm ci --prefix "$dev_dir"
+
+          env \
+            VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+            VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" \
+            VITE_VAPID_PUBLIC_KEY="$VITE_VAPID_PUBLIC_KEY" \
+            VITE_SITE_BASE_PATH="/" \
+            npm run --prefix "$main_dir" build
+
+          env \
+            VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+            VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" \
+            VITE_VAPID_PUBLIC_KEY="$VITE_VAPID_PUBLIC_KEY" \
+            VITE_SUPABASE_TABLE_PREFIX="dev_" \
+            VITE_SITE_BASE_PATH="/dev/" \
+            VITE_APP_NAME="Truthwatcher Dev" \
+            VITE_APP_DESCRIPTION="Development environment for Truthwatcher." \
+            VITE_STORAGE_PREFIX="dev" \
+            VITE_DB_NAME="truthwatcher-dev" \
+            npm run --prefix "$dev_dir" build
+
+          rm -rf "$site_dir"
+          mkdir -p "$site_dir/dev"
+          cp -R "$main_dir/dist/." "$site_dir/"
+          cp -R "$dev_dir/dist/." "$site_dir/dev/"
+          cp CNAME "$site_dir/CNAME"
+          touch "$site_dir/.nojekyll"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+          path: ./site
 
   deploy:
     needs: build
