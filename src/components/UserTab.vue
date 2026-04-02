@@ -66,96 +66,100 @@ function handleEnableNotifications() {
 
 <template>
   <section class="panel home-panel">
-    <section class="progress-card-shell">
-      <p class="eyebrow">Cosmere Progress</p>
-      <div class="cosmere-progress-card">
-        <div class="progress-ring-wrap">
-          <svg class="progress-ring" viewBox="0 0 140 140" aria-hidden="true">
-            <defs>
-              <linearGradient id="cosmere-progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#21453c" />
-                <stop offset="100%" stop-color="#8dad8f" />
-              </linearGradient>
-            </defs>
-            <circle class="progress-ring-track" cx="70" cy="70" r="52" />
-            <circle
-              class="progress-ring-value"
-              cx="70"
-              cy="70"
-              r="52"
-              :stroke-dasharray="progressCircumference"
-              :stroke-dashoffset="progressDashOffset"
-            />
-          </svg>
-          <div class="progress-ring-copy">
-            <span class="progress-ring-value-text">{{ cosmereProgress.percentComplete }}%</span>
-            <span class="progress-ring-caption">complete</span>
-          </div>
-        </div>
-
-        <div class="cosmere-progress-copy">
-          <h3>{{ isSignedIn ? 'Your journey through the Cosmere' : 'Sign in to track your journey' }}</h3>
-          <p class="auth-copy">
-            {{
-              isSignedIn
-                ? `${formatHours(cosmereProgress.completedHours)} of ${formatHours(cosmereProgress.totalHours)} hours completed`
-                : `Track ${formatHours(cosmereProgress.totalHours)} hours across ${cosmereProgress.totalBooks} books`
-            }}
-          </p>
-
-          <div class="progress-stat-grid">
-            <div class="progress-stat">
-              <span class="progress-stat-label">Books read</span>
-              <strong>{{ cosmereProgress.completedBooks }}/{{ cosmereProgress.totalBooks }}</strong>
-            </div>
-            <div class="progress-stat">
-              <span class="progress-stat-label">Hours left</span>
-              <strong>{{ formatHours(cosmereProgress.remainingHours) }}</strong>
+    <div class="home-progress-stage">
+      <section class="progress-card-shell">
+        <p class="eyebrow">Cosmere Progress</p>
+        <div class="cosmere-progress-card">
+          <div class="progress-ring-wrap">
+            <svg class="progress-ring" viewBox="0 0 140 140" aria-hidden="true">
+              <defs>
+                <linearGradient id="cosmere-progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#21453c" />
+                  <stop offset="100%" stop-color="#8dad8f" />
+                </linearGradient>
+              </defs>
+              <circle class="progress-ring-track" cx="70" cy="70" r="52" />
+              <circle
+                class="progress-ring-value"
+                cx="70"
+                cy="70"
+                r="52"
+                :stroke-dasharray="progressCircumference"
+                :stroke-dashoffset="progressDashOffset"
+              />
+            </svg>
+            <div class="progress-ring-copy">
+              <span class="progress-ring-value-text">{{ cosmereProgress.percentComplete }}%</span>
+              <span class="progress-ring-caption">complete</span>
             </div>
           </div>
+
+          <div class="cosmere-progress-copy">
+            <h3>{{ isSignedIn ? 'Your journey through the Cosmere' : 'Sign in to track your journey' }}</h3>
+            <p class="auth-copy">
+              {{
+                isSignedIn
+                  ? `${formatHours(cosmereProgress.completedHours)} of ${formatHours(cosmereProgress.totalHours)} hours completed`
+                  : `Track ${formatHours(cosmereProgress.totalHours)} hours across ${cosmereProgress.totalBooks} books`
+              }}
+            </p>
+
+            <div class="progress-stat-grid">
+              <div class="progress-stat">
+                <span class="progress-stat-label">Books read</span>
+                <strong>{{ cosmereProgress.completedBooks }}/{{ cosmereProgress.totalBooks }}</strong>
+              </div>
+              <div class="progress-stat">
+                <span class="progress-stat-label">Hours left</span>
+                <strong>{{ formatHours(cosmereProgress.remainingHours) }}</strong>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <section v-if="notificationPermission !== 'granted'" class="settings-card">
-      <p class="eyebrow">Notifications</p>
-      <p class="auth-copy">
-        Enable notifications to follow writing progress updates for specific projects.
-      </p>
-      <button class="secondary-button settings-button" @click="handleEnableNotifications">
-        Enable notifications
-      </button>
-    </section>
-
-    <div v-if="isSignedIn" class="profile-card">
-      <div class="profile-header">
-        <img
-          v-if="currentUserAvatar"
-          class="profile-avatar"
-          :src="currentUserAvatar"
-          :alt="`${currentUserName} profile picture`"
-          referrerpolicy="no-referrer"
-        />
-        <div v-else class="profile-avatar fallback-avatar" aria-hidden="true">
-          {{ currentUserInitial }}
-        </div>
-
-        <div class="profile-copy">
-          <h3>{{ currentUserName }}</h3>
-          <p>{{ currentUserEmail }}</p>
-        </div>
-      </div>
-
-      <button class="primary-button profile-signout" :disabled="authBusy" @click="handleSignOut">
-        {{ authBusy ? 'Signing out…' : 'Sign out' }}
-      </button>
+      </section>
     </div>
 
-    <div v-else class="empty-state">
-      <p class="auth-copy">Sign in with Google to save your checklist and progress.</p>
-      <button class="primary-button" :disabled="authLoading || authBusy" @click="handleSignIn">
-        {{ authLoading ? 'Checking session…' : authBusy ? 'Redirecting…' : 'Sign in with Google' }}
-      </button>
+    <div class="home-bottom-stack">
+      <section v-if="notificationPermission !== 'granted'" class="settings-card">
+        <p class="eyebrow">Notifications</p>
+        <p class="auth-copy">
+          Enable notifications to follow writing progress updates for specific projects.
+        </p>
+        <button class="secondary-button settings-button" @click="handleEnableNotifications">
+          Enable notifications
+        </button>
+      </section>
+
+      <div v-if="isSignedIn" class="profile-card">
+        <div class="profile-header">
+          <img
+            v-if="currentUserAvatar"
+            class="profile-avatar"
+            :src="currentUserAvatar"
+            :alt="`${currentUserName} profile picture`"
+            referrerpolicy="no-referrer"
+          />
+          <div v-else class="profile-avatar fallback-avatar" aria-hidden="true">
+            {{ currentUserInitial }}
+          </div>
+
+          <div class="profile-copy">
+            <h3>{{ currentUserName }}</h3>
+            <p>{{ currentUserEmail }}</p>
+          </div>
+        </div>
+
+        <button class="primary-button profile-signout" :disabled="authBusy" @click="handleSignOut">
+          {{ authBusy ? 'Signing out…' : 'Sign out' }}
+        </button>
+      </div>
+
+      <div v-else class="empty-state">
+        <p class="auth-copy">Sign in with Google to save your checklist and progress.</p>
+        <button class="primary-button" :disabled="authLoading || authBusy" @click="handleSignIn">
+          {{ authLoading ? 'Checking session…' : authBusy ? 'Redirecting…' : 'Sign in with Google' }}
+        </button>
+      </div>
     </div>
   </section>
 </template>

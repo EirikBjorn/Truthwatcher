@@ -688,6 +688,18 @@ input {
 
 .home-panel {
   display: grid;
+  gap: 1.25rem;
+  min-height: calc(100svh - 11rem);
+  grid-template-rows: 1fr auto;
+}
+
+.home-progress-stage {
+  display: grid;
+  align-items: center;
+}
+
+.home-bottom-stack {
+  display: grid;
   gap: 1rem;
 }
 
@@ -761,6 +773,9 @@ input {
     radial-gradient(circle at top left, rgba(194, 216, 152, 0.22), transparent 12rem),
     linear-gradient(180deg, #fbfaf7, #f3ede4);
   border: 1px solid rgba(20, 35, 31, 0.08);
+  max-width: 52rem;
+  width: 100%;
+  justify-self: center;
 }
 
 .cosmere-progress-card {
@@ -936,6 +951,11 @@ input {
 
   .empty-state {
     gap: 1rem;
+  }
+
+  .home-panel {
+    min-height: auto;
+    grid-template-rows: auto auto;
   }
 
   .cosmere-progress-card {
