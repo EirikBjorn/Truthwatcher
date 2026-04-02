@@ -1,54 +1,113 @@
-import Dexie from 'dexie'
-import { dbName } from './app-env'
-import { COSMERE_WORKS } from './books'
+import { COSMERE_WORKS, getWorkSeriesMeta } from './books'
+import {
+  fetchCurrentlyReadingItems,
+  fetchReadingChecklistItems,
+  fetchReadingChecklistReaders,
+  saveCurrentlyReadingItem,
+  saveReadingChecklistItem,
+  syncCurrentProfile,
+} from './api'
 
-const db = new Dexie(dbName)
+function createReaderRecord(reader) {
+  const initial = (reader.displayName || 'U').trim().charAt(0).toUpperCase() || 'U'
 
-db.version(1).stores({
-  reading_list: 'id, order, completed',
-})
+  return {
+    ...reader,
+    initial,
+  }
+}
 
-db.version(2).stores({
-  reading_list: 'id, publicationOrder, planet, completed',
-})
+function buildReadingList(
+  completedWorkIds = [],
+  readersByWork = {},
+  currentReadingByWork = {},
+  currentUserId = null,
+) {
+  const completedSet = new Set(completedWorkIds)
 
-async function syncReadingList() {
-  const existingItems = await db.reading_list.toArray()
-  const completedById = new Map(existingItems.map((item) => [item.id, item.completed]))
-  const validIds = new Set(COSMERE_WORKS.map((work) => work.id))
-  const staleIds = existingItems
-    .map((item) => item.id)
-    .filter((id) => !validIds.has(id))
+  return COSMERE_WORKS.map((work) => ({
+    ...work,
+    ...getWorkSeriesMeta(work),
+    completed: completedSet.has(work.id),
+    isCurrentlyReading: Boolean(currentReadingByWork[work.id]),
+    startedReadingAt: currentReadingByWork[work.id] ?? null,
+    readers: [...(readersByWork[work.id] ?? [])]
+      .sort((left, right) => {
+        if (left.id === currentUserId && right.id !== currentUserId) {
+          return -1
+        }
 
-  if (staleIds.length) {
-    await db.reading_list.bulkDelete(staleIds)
+        if (right.id === currentUserId && left.id !== currentUserId) {
+          return 1
+        }
+
+        return left.displayName.localeCompare(right.displayName)
+      })
+      .map(createReaderRecord),
+  }))
+}
+
+export async function getReadingList(user) {
+  if (!user) {
+    return buildReadingList()
   }
 
-  await db.reading_list.bulkPut(
-    COSMERE_WORKS.map((work) => ({
-      ...work,
-      completed: completedById.get(work.id) ?? false,
-    })),
+  const [completedWorkIds, readersByWork, currentReadingItems] = await Promise.all([
+    fetchReadingChecklistItems(user.id),
+    fetchReadingChecklistReaders(),
+    fetchCurrentlyReadingItems(user.id),
+  ])
+
+  const currentReadingByWork = Object.fromEntries(
+    currentReadingItems.map((item) => [item.work_id, item.started_at]),
   )
+
+  return buildReadingList(completedWorkIds, readersByWork, currentReadingByWork, user.id)
 }
 
-export async function getReadingList() {
-  await syncReadingList()
-  return db.reading_list.toArray()
-}
+export async function setReadingItemCompleted({ id, completed, user }) {
+  if (!user) {
+    throw new Error('You must be signed in to save your checklist.')
+  }
 
-export async function toggleReadingItem(id) {
-  const item = await db.reading_list.get(id)
+  const item = COSMERE_WORKS.find((work) => work.id === id)
 
   if (!item) {
     throw new Error(`Missing reading list item: ${id}`)
   }
 
-  const updated = {
+  await syncCurrentProfile(user)
+  await saveReadingChecklistItem({
+    workId: id,
+    completed,
+  })
+
+  return {
     ...item,
-    completed: !item.completed,
+    completed,
+  }
+}
+
+export async function setReadingItemCurrentState({ id, reading, user }) {
+  if (!user) {
+    throw new Error('You must be signed in to save your current reading state.')
   }
 
-  await db.reading_list.put(updated)
-  return updated
+  const item = COSMERE_WORKS.find((work) => work.id === id)
+
+  if (!item) {
+    throw new Error(`Missing reading list item: ${id}`)
+  }
+
+  await syncCurrentProfile(user)
+  await saveCurrentlyReadingItem({
+    workId: id,
+    reading,
+  })
+
+  return {
+    ...item,
+    isCurrentlyReading: reading,
+    startedReadingAt: reading ? new Date().toISOString() : null,
+  }
 }

@@ -1,3 +1,4 @@
 import { createTableNames } from '../../lib/shared/table-names'
+import { getClientTablePrefix } from './app-env'
 
-export const tables = createTableNames(import.meta.env.VITE_SUPABASE_TABLE_PREFIX)
+export const tables = createTableNames(getClientTablePrefix())

@@ -1,7 +1,7 @@
 export const CHECKLIST_TABS = [
+  { id: 'eirik', label: 'Reading Order' },
   { id: 'publication', label: 'Publication Order' },
   { id: 'planet', label: 'By Planet' },
-  { id: 'eirik', label: "Eirik's Order" },
 ]
 
 export const PLANET_ORDER = [
@@ -271,3 +271,80 @@ export const COSMERE_WORKS = [
     durationLabel: '~8 hours',
   },
 ]
+
+const workById = new Map(COSMERE_WORKS.map((work) => [work.id, work]))
+
+const SERIES_META = {
+  mistborn: {
+    slug: 'mistborn',
+    label: 'Mistborn',
+    shortLabel: 'MB',
+  },
+  stormlight: {
+    slug: 'stormlight',
+    label: 'Stormlight',
+    shortLabel: 'SA',
+  },
+  elantris: {
+    slug: 'elantris',
+    label: 'Elantris',
+    shortLabel: 'EL',
+  },
+  standalone: {
+    slug: 'standalone',
+    label: 'Standalone',
+    shortLabel: 'ST',
+  },
+}
+
+export function getWorkById(id) {
+  return workById.get(id) ?? null
+}
+
+export function getWorkSeriesMeta(work) {
+  const title = String(work?.title ?? '')
+  const id = String(work?.id ?? '')
+
+  if (
+    title.startsWith('Mistborn:') ||
+    id === 'the-eleventh-metal' ||
+    id === 'allomancer-jak'
+  ) {
+    return SERIES_META.mistborn
+  }
+
+  if (title.startsWith('The Stormlight Archive:')) {
+    return SERIES_META.stormlight
+  }
+
+  if (['elantris', 'the-hope-of-elantris', 'emperors-soul'].includes(id)) {
+    return SERIES_META.elantris
+  }
+
+  return SERIES_META.standalone
+}
+
+export function getWorkDurationHours(work) {
+  const match = String(work?.durationLabel ?? '').match(/(\d+(?:\.\d+)?)/)
+
+  return match ? Number(match[1]) : 0
+}
+
+export function calculateCosmereProgress(readingList = []) {
+  const totalHours = COSMERE_WORKS.reduce((sum, work) => sum + getWorkDurationHours(work), 0)
+  const completedBooks = readingList.filter((work) => work.completed).length
+  const completedHours = readingList
+    .filter((work) => work.completed)
+    .reduce((sum, work) => sum + getWorkDurationHours(work), 0)
+  const remainingHours = Math.max(totalHours - completedHours, 0)
+  const percentComplete = totalHours ? Math.round((completedHours / totalHours) * 100) : 0
+
+  return {
+    completedBooks,
+    totalBooks: COSMERE_WORKS.length,
+    completedHours,
+    totalHours,
+    remainingHours,
+    percentComplete,
+  }
+}

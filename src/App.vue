@@ -1,36 +1,75 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+  fetchCurrentProfile,
   fetchLatestProgress,
   fetchProjectSubscriptions,
+  fetchReadingActivity,
   saveProjectSubscription,
+  saveActivityNotificationsPreference,
   savePushSubscription,
+  syncCurrentProfile,
 } from './lib/api'
 import { storageKeyPrefix } from './lib/app-env'
-import { CHECKLIST_TABS, PLANET_ORDER } from './lib/books'
-import { getReadingList, toggleReadingItem } from './lib/db'
+import { CHECKLIST_TABS, PLANET_ORDER, calculateCosmereProgress } from './lib/books'
+import ActivityTab from './components/ActivityTab.vue'
+import ReadingListTab from './components/ReadingListTab.vue'
+import {
+  getReadingList,
+  setReadingItemCompleted,
+  setReadingItemCurrentState,
+} from './lib/db'
+import TrackerTab from './components/TrackerTab.vue'
+import UserTab from './components/UserTab.vue'
+import { signInWithGoogle, signOut, supabase } from './lib/supabase'
 
 const progressItems = ref([])
 const readingList = ref([])
+const activityItems = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
+const authLoading = ref(true)
+const authBusy = ref(false)
+const currentUser = ref(null)
 const checklistTabStorageKey = `${storageKeyPrefix}.checklistTab`
 const appTabStorageKey = `${storageKeyPrefix}.appTab`
 const notificationPermission = ref(
   typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
 )
+const activityNotificationsEnabled = ref(false)
 const currentSubscription = ref(null)
 const subscriptionMap = ref({})
-const activeChecklistTab = ref('publication')
-const activeAppTab = ref('tracker')
+const activeChecklistTab = ref('eirik')
+const activeAppTab = ref('home')
 const appTabs = [
-  { id: 'tracker', label: 'Tracker' },
+  { id: 'home', label: 'Home' },
   { id: 'list', label: 'List' },
+  { id: 'activity', label: 'Acticity' },
+  { id: 'tracker', label: 'Tracker' },
 ]
 
 const completedBooks = computed(() =>
   readingList.value.filter((item) => item.completed).length,
 )
+const cosmereProgress = computed(() => calculateCosmereProgress(readingList.value))
+const isSignedIn = computed(() => Boolean(currentUser.value))
+const currentUserName = computed(() => {
+  const metadata = currentUser.value?.user_metadata ?? {}
+
+  return (
+    metadata.full_name ||
+    metadata.name ||
+    currentUser.value?.email?.split('@')[0] ||
+    'Truthwatcher User'
+  )
+})
+const currentUserEmail = computed(() => currentUser.value?.email || '')
+const currentUserAvatar = computed(() => {
+  const metadata = currentUser.value?.user_metadata ?? {}
+
+  return metadata.avatar_url || metadata.picture || ''
+})
+const currentUserInitial = computed(() => currentUserName.value.trim().charAt(0).toUpperCase() || 'U')
 
 const checklistSections = computed(() => {
   if (activeChecklistTab.value === 'planet') {
@@ -43,16 +82,28 @@ const checklistSections = computed(() => {
           .sort((left, right) => left.publicationOrder - right.publicationOrder),
       }))
       .filter((section) => section.items.length)
+      .map((section) => ({
+        ...section,
+        items: section.items.map((item) => ({
+          ...item,
+          meta: formatChecklistMeta(item),
+        })),
+      }))
   }
 
   const sortField = activeChecklistTab.value === 'eirik' ? 'eirikOrder' : 'publicationOrder'
-  const title = activeChecklistTab.value === 'eirik' ? "Eirik's Order" : 'Publication Order'
+  const title = activeChecklistTab.value === 'eirik' ? 'Reading Order' : 'Publication Order'
 
   return [
     {
       id: activeChecklistTab.value,
       title,
-      items: [...readingList.value].sort((left, right) => left[sortField] - right[sortField]),
+      items: [...readingList.value]
+        .sort((left, right) => left[sortField] - right[sortField])
+        .map((item) => ({
+          ...item,
+          meta: formatChecklistMeta(item),
+        })),
     },
   ]
 })
@@ -63,7 +114,26 @@ const notificationSupported =
   'serviceWorker' in navigator &&
   'PushManager' in window
 
+let authStateSubscription = null
+
 onMounted(async () => {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser.value = session?.user ?? null
+    authLoading.value = false
+    if (session?.user) {
+      void syncCurrentProfile(session.user)
+      if (currentSubscription.value) {
+        void savePushSubscription(currentSubscription.value)
+      }
+    }
+    void loadReadingList(currentUser.value)
+    void loadActivityItems(currentUser.value)
+    void loadProjectSubscriptionMap(currentUser.value)
+    void loadActivityNotificationPreference(currentUser.value)
+  })
+
+  authStateSubscription = data.subscription
+
   try {
     const savedChecklistTab = readSavedChecklistTab()
     const savedAppTab = readSavedAppTab()
@@ -76,13 +146,39 @@ onMounted(async () => {
       activeAppTab.value = savedAppTab
     }
 
-    await Promise.all([loadProgress(), loadReadingList(), hydratePushState()])
+    await hydrateAuthState()
+    await Promise.all([
+      loadProgress(),
+      loadReadingList(),
+      loadActivityItems(),
+      hydratePushState(),
+      loadProjectSubscriptionMap(),
+      loadActivityNotificationPreference(),
+    ])
   } catch (error) {
     errorMessage.value = error.message
   } finally {
     loading.value = false
   }
 })
+
+onUnmounted(() => {
+  authStateSubscription?.unsubscribe()
+})
+
+async function hydrateAuthState() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession()
+
+  if (error) {
+    throw error
+  }
+
+  currentUser.value = session?.user ?? null
+  authLoading.value = false
+}
 
 async function loadProgress() {
   try {
@@ -92,8 +188,45 @@ async function loadProgress() {
   }
 }
 
-async function loadReadingList() {
-  readingList.value = await getReadingList()
+async function loadReadingList(user = currentUser.value) {
+  readingList.value = await getReadingList(user)
+}
+
+async function loadActivityItems(user = currentUser.value) {
+  if (!user) {
+    activityItems.value = []
+    return
+  }
+
+  activityItems.value = await fetchReadingActivity(20)
+}
+
+async function loadProjectSubscriptionMap(user = currentUser.value) {
+  if (!user?.id) {
+    subscriptionMap.value = {}
+    return
+  }
+
+  try {
+    const projectSlugs = await fetchProjectSubscriptions(user.id)
+    subscriptionMap.value = Object.fromEntries(projectSlugs.map((slug) => [slug, true]))
+  } catch (error) {
+    errorMessage.value = error.message
+  }
+}
+
+async function loadActivityNotificationPreference(user = currentUser.value) {
+  if (!user?.id) {
+    activityNotificationsEnabled.value = false
+    return
+  }
+
+  try {
+    const profile = await fetchCurrentProfile(user.id)
+    activityNotificationsEnabled.value = Boolean(profile?.activityNotificationsEnabled)
+  } catch (error) {
+    errorMessage.value = error.message
+  }
 }
 
 async function hydratePushState() {
@@ -109,8 +242,9 @@ async function hydratePushState() {
   }
 
   currentSubscription.value = subscription.toJSON()
-  const projectSlugs = await fetchProjectSubscriptions(currentSubscription.value.endpoint)
-  subscriptionMap.value = Object.fromEntries(projectSlugs.map((slug) => [slug, true]))
+  if (currentUser.value) {
+    await savePushSubscription(currentSubscription.value)
+  }
 }
 
 async function enableNotifications() {
@@ -150,21 +284,87 @@ async function enableNotifications() {
   }
 }
 
+async function toggleActivityNotifications(enabled) {
+  if (!currentUser.value) {
+    return
+  }
+
+  try {
+    errorMessage.value = ''
+
+    if (enabled && notificationPermission.value !== 'granted') {
+      await enableNotifications()
+
+      if (notificationPermission.value !== 'granted') {
+        return
+      }
+    }
+
+    if (currentSubscription.value) {
+      await savePushSubscription(currentSubscription.value)
+    }
+
+    await saveActivityNotificationsPreference({
+      user: currentUser.value,
+      enabled,
+    })
+    activityNotificationsEnabled.value = enabled
+  } catch (error) {
+    errorMessage.value = error.message
+  }
+}
+
+async function startGoogleSignIn() {
+  try {
+    errorMessage.value = ''
+    authBusy.value = true
+    await signInWithGoogle()
+  } catch (error) {
+    errorMessage.value = error.message
+    authBusy.value = false
+  }
+}
+
+async function handleSignOut() {
+  try {
+    errorMessage.value = ''
+    authBusy.value = true
+    await signOut()
+    activeAppTab.value = 'home'
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    authBusy.value = false
+  }
+}
+
 async function toggleProject(projectSlug, enabled) {
   try {
+    if (!currentUser.value) {
+      errorMessage.value = 'Sign in to manage writing progress notifications.'
+      return
+    }
+
+    if (enabled && notificationPermission.value !== 'granted') {
+      await enableNotifications()
+
+      if (notificationPermission.value !== 'granted') {
+        return
+      }
+    }
+
     subscriptionMap.value = {
       ...subscriptionMap.value,
       [projectSlug]: enabled,
     }
 
-    if (!currentSubscription.value) {
-      return
+    if (currentSubscription.value) {
+      await savePushSubscription(currentSubscription.value)
     }
 
     await saveProjectSubscription({
       projectSlug,
       enabled,
-      subscription: currentSubscription.value,
     })
   } catch (error) {
     errorMessage.value = error.message
@@ -172,8 +372,42 @@ async function toggleProject(projectSlug, enabled) {
 }
 
 async function toggleBook(id) {
-  const updated = await toggleReadingItem(id)
-  readingList.value = readingList.value.map((item) => (item.id === id ? updated : item))
+  const existingItem = readingList.value.find((item) => item.id === id)
+
+  if (!existingItem || !currentUser.value) {
+    return
+  }
+
+  await setReadingItemCompleted({
+    id,
+    completed: !existingItem.completed,
+    user: currentUser.value,
+  })
+  if (!existingItem.completed && existingItem.isCurrentlyReading) {
+    await setReadingItemCurrentState({
+      id,
+      reading: false,
+      user: currentUser.value,
+    })
+  }
+  await loadReadingList(currentUser.value)
+  await loadActivityItems(currentUser.value)
+}
+
+async function toggleCurrentReading(id) {
+  const existingItem = readingList.value.find((item) => item.id === id)
+
+  if (!existingItem || !currentUser.value || existingItem.completed) {
+    return
+  }
+
+  await setReadingItemCurrentState({
+    id,
+    reading: !existingItem.isCurrentlyReading,
+    user: currentUser.value,
+  })
+  await loadReadingList(currentUser.value)
+  await loadActivityItems(currentUser.value)
 }
 
 function readSavedChecklistTab() {
@@ -237,104 +471,55 @@ watch(activeAppTab, (value) => {
 
 <template>
   <main class="app-shell">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Truthwatcher</p>
-        <h1>The Cosmere progress tracker</h1>
-        <p class="eyebrow">
-          and the cosmere reading checklist
-        </p>
-      </div>
-
-      <button
-        class="primary-button"
-        :disabled="notificationPermission === 'granted'"
-        @click="enableNotifications"
-      >
-        {{ notificationPermission === 'granted' ? 'Notifications enabled' : 'Enable notifications' }}
-      </button>
-    </section>
-
     <p v-if="errorMessage" class="status error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="status">Loading…</p>
 
-    <section v-if="activeAppTab === 'tracker'" class="panel">
-      <div class="section-header">
-        <div>
-          <p class="eyebrow">Writing Progress</p>
-          <h2>Current projects</h2>
-        </div>
-      </div>
+    <UserTab
+      v-if="activeAppTab === 'home'"
+      :is-signed-in="isSignedIn"
+      :current-user-avatar="currentUserAvatar"
+      :current-user-name="currentUserName"
+      :current-user-email="currentUserEmail"
+      :current-user-initial="currentUserInitial"
+      :auth-busy="authBusy"
+      :auth-loading="authLoading"
+      :notification-permission="notificationPermission"
+      :cosmere-progress="cosmereProgress"
+      @sign-in="startGoogleSignIn"
+      @sign-out="handleSignOut"
+      @enable-notifications="enableNotifications"
+    />
 
-      <div class="progress-grid">
-        <article
-          v-for="item in progressItems"
-          :key="item.project_slug"
-          class="progress-card"
-          :class="{ completed: item.progress === 100 }"
-        >
-          <div class="progress-heading">
-            <div class="progress-copy">
-              <h3>{{ item.project }}</h3>
-              <p>{{ item.progress }}% complete</p>
-            </div>
-            <span v-if="item.progress === 100" class="completion-pill">Complete</span>
-          </div>
+    <ReadingListTab
+      v-else-if="activeAppTab === 'list'"
+      :completed-books="completedBooks"
+      :reading-list-length="readingList.length"
+      :is-signed-in="isSignedIn"
+      :active-checklist-tab="activeChecklistTab"
+      :checklist-sections="checklistSections"
+      @update:active-checklist-tab="activeChecklistTab = $event"
+      @toggle-book="toggleBook"
+      @toggle-current-reading="toggleCurrentReading"
+    />
 
-          <div class="progress-bar" aria-hidden="true">
-            <span :style="{ width: `${item.progress}%` }" />
-          </div>
+    <ActivityTab
+      v-else-if="activeAppTab === 'activity'"
+      :is-signed-in="isSignedIn"
+      :activity-items="activityItems"
+      :activity-notifications-enabled="activityNotificationsEnabled"
+      :notification-supported="notificationSupported"
+      :notification-permission="notificationPermission"
+      @toggle-activity-notifications="toggleActivityNotifications"
+    />
 
-          <label class="toggle">
-            <input
-              type="checkbox"
-              :checked="Boolean(subscriptionMap[item.project_slug])"
-              :disabled="notificationPermission !== 'granted'"
-              @change="toggleProject(item.project_slug, $event.target.checked)"
-            />
-            <span class="toggle-label">Notify me about {{ item.project }}</span>
-          </label>
-        </article>
-      </div>
-    </section>
-
-    <section v-else class="panel">
-      <div class="section-header">
-        <div>
-          <p class="eyebrow">Reading Checklist</p>
-          <h2>{{ completedBooks }}/{{ readingList.length }} completed</h2>
-        </div>
-      </div>
-
-      <div class="tab-row" role="tablist" aria-label="Checklist order">
-        <button
-          v-for="tab in CHECKLIST_TABS"
-          :key="tab.id"
-          class="tab-button"
-          :class="{ active: activeChecklistTab === tab.id }"
-          type="button"
-          @click="activeChecklistTab = tab.id"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <div class="checklist-sections">
-        <section v-for="section in checklistSections" :key="section.id" class="checklist-section">
-          <h3 class="checklist-heading">{{ section.title }}</h3>
-
-          <div class="checklist">
-            <label v-for="book in section.items" :key="book.id" class="checklist-item">
-              <input type="checkbox" :checked="book.completed" @change="toggleBook(book.id)" />
-              <span class="checklist-copy">
-                <span>{{ book.title }}</span>
-                <span class="checklist-meta">{{ formatChecklistMeta(book) }}</span>
-              </span>
-            </label>
-          </div>
-        </section>
-      </div>
-    </section>
+    <TrackerTab
+      v-else
+      :progress-items="progressItems"
+      :subscription-map="subscriptionMap"
+      :is-signed-in="isSignedIn"
+      :notification-permission="notificationPermission"
+      @toggle-project="toggleProject($event.projectSlug, $event.enabled)"
+    />
 
     <nav class="bottom-nav" aria-label="Main navigation">
       <button

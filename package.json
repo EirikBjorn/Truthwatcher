@@ -12,6 +12,10 @@
     "preview": "vite preview",
     "scrape:brando": "node --env-file=.env lib/scraper/brando.js",
     "scrape:brando:ci": "node lib/scraper/brando.js",
+    "notify:activity": "node --env-file=.env lib/notify/activity.js",
+    "notify:activity:ci": "node lib/notify/activity.js",
+    "notify:progress-spoof": "node --env-file=.env lib/notify/progress-spoof.js",
+    "notify:progress-spoof:ci": "node lib/notify/progress-spoof.js",
     "notify:test": "node --env-file=.env lib/notify/test.js",
     "notify:test:ci": "node lib/notify/test.js"
   },

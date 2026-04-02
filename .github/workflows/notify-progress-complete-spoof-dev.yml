@@ -1,0 +1,31 @@
+name: Send Dev Spoof Completion Notification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify-dev-complete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v5
+        with:
+          ref: dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run notify:progress-spoof:ci
+        env:
+          SPOOF_PROGRESS_VARIANT: complete
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_TABLE_PREFIX: dev_
+          APP_BASE_PATH: /dev/
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}

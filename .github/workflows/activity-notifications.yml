@@ -1,0 +1,75 @@
+name: Send Activity Notifications
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to notify
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - production
+          - dev
+  schedule:
+    - cron: '*/5 * * * *'
+
+concurrency:
+  group: activity-notifications
+  cancel-in-progress: false
+
+jobs:
+  notify-production:
+    if: >
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.target != 'dev')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run notify:activity:ci
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          APP_BASE_PATH: /
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+
+  notify-dev:
+    if: >
+      github.event_name == 'workflow_dispatch' && github.event.inputs.target != 'production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v5
+        with:
+          ref: dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run notify:activity:ci
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_TABLE_PREFIX: dev_
+          APP_BASE_PATH: /dev/
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
