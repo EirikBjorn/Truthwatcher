@@ -25,6 +25,7 @@ input {
   width: min(68rem, calc(100vw - 2rem));
   margin: 0 auto;
   padding: 2rem 0 7rem;
+  min-width: 0;
 }
 
 .panel {
@@ -696,22 +697,26 @@ input {
 .home-progress-stage {
   display: grid;
   align-items: center;
+  min-width: 0;
 }
 
 .home-bottom-stack {
   display: grid;
   gap: 1rem;
+  min-width: 0;
 }
 
 .profile-card {
   display: grid;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 .profile-header {
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
 .profile-avatar {
@@ -736,6 +741,7 @@ input {
 .profile-copy {
   display: grid;
   gap: 0.3rem;
+  min-width: 0;
 }
 
 .profile-copy h3,
@@ -745,6 +751,7 @@ input {
 
 .profile-copy p {
   color: #4a5e56;
+  overflow-wrap: anywhere;
 }
 
 .profile-signout {
@@ -758,6 +765,7 @@ input {
   border-radius: 1rem;
   background: #fff;
   border: 1px solid rgba(20, 35, 31, 0.08);
+  min-width: 0;
 }
 
 .settings-card-enabled {
@@ -789,6 +797,7 @@ input {
   max-width: 52rem;
   width: 100%;
   justify-self: center;
+  min-width: 0;
 }
 
 .progress-eyebrow {
