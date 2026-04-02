@@ -126,17 +126,22 @@ export async function saveProjectSubscription({ projectSlug, enabled }) {
     return
   }
 
-  const { error } = await supabase.from(tables.projectSubscriptions).upsert(
-    {
-      user_id: user.id,
-      project_slug: projectSlug,
-      notifications_enabled: true,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: 'user_id,project_slug',
-    },
-  )
+  const { error: deleteError } = await supabase
+    .from(tables.projectSubscriptions)
+    .delete()
+    .eq('project_slug', projectSlug)
+    .eq('user_id', user.id)
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  const { error } = await supabase.from(tables.projectSubscriptions).insert({
+    user_id: user.id,
+    project_slug: projectSlug,
+    notifications_enabled: true,
+    updated_at: new Date().toISOString(),
+  })
 
   if (error) {
     throw error
