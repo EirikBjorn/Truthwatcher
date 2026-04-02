@@ -69,12 +69,16 @@ create table if not exists public.profiles (
   display_name text not null,
   avatar_url text,
   activity_notifications_enabled boolean not null default false,
+  last_activity_notification_sent_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.profiles
 add column if not exists activity_notifications_enabled boolean not null default false;
+
+alter table public.profiles
+add column if not exists last_activity_notification_sent_at timestamptz;
 
 create table if not exists public.currently_reading_items (
   id bigint generated always as identity primary key,
@@ -307,12 +311,16 @@ create table if not exists public.dev_profiles (
   display_name text not null,
   avatar_url text,
   activity_notifications_enabled boolean not null default false,
+  last_activity_notification_sent_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.dev_profiles
 add column if not exists activity_notifications_enabled boolean not null default false;
+
+alter table public.dev_profiles
+add column if not exists last_activity_notification_sent_at timestamptz;
 
 create table if not exists public.dev_currently_reading_items (
   id bigint generated always as identity primary key,
