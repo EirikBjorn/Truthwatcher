@@ -1,7 +1,8 @@
 import Dexie from 'dexie'
+import { dbName } from './app-env'
 import { COSMERE_WORKS } from './books'
 
-const db = new Dexie('truthwatcher')
+const db = new Dexie(dbName)
 
 db.version(1).stores({
   reading_list: 'id, order, completed',

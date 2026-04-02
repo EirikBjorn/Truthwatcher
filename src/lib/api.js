@@ -1,8 +1,9 @@
 import { supabase } from './supabase'
+import { tables } from './tables'
 
 export async function fetchLatestProgress() {
   const { data, error } = await supabase
-    .from('writing_progress')
+    .from(tables.writingProgress)
     .select('project_slug, project, progress, updated_at')
     .eq('is_visible', true)
     .order('project_slug')
@@ -20,7 +21,7 @@ export async function fetchProjectSubscriptions(endpoint) {
   }
 
   const { data, error } = await supabase
-    .from('project_subscriptions')
+    .from(tables.projectSubscriptions)
     .select('project_slug')
     .eq('endpoint', endpoint)
     .eq('notifications_enabled', true)
@@ -37,7 +38,7 @@ export async function savePushSubscription(subscription) {
     throw new Error('A web push subscription is required before it can be saved.')
   }
 
-  const { error } = await supabase.from('push_subscriptions').upsert(
+  const { error } = await supabase.from(tables.pushSubscriptions).upsert(
     {
       endpoint: subscription.endpoint,
       subscription,
@@ -62,7 +63,7 @@ export async function saveProjectSubscription({ projectSlug, enabled, subscripti
 
   if (!enabled) {
     const { error } = await supabase
-      .from('project_subscriptions')
+      .from(tables.projectSubscriptions)
       .delete()
       .eq('project_slug', projectSlug)
       .eq('endpoint', subscription.endpoint)
@@ -74,7 +75,7 @@ export async function saveProjectSubscription({ projectSlug, enabled, subscripti
     return
   }
 
-  const { error } = await supabase.from('project_subscriptions').upsert(
+  const { error } = await supabase.from(tables.projectSubscriptions).upsert(
     {
       project_slug: projectSlug,
       endpoint: subscription.endpoint,

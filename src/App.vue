@@ -6,6 +6,7 @@ import {
   saveProjectSubscription,
   savePushSubscription,
 } from './lib/api'
+import { storageKeyPrefix } from './lib/app-env'
 import { CHECKLIST_TABS, PLANET_ORDER } from './lib/books'
 import { getReadingList, toggleReadingItem } from './lib/db'
 
@@ -13,8 +14,8 @@ const progressItems = ref([])
 const readingList = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
-const checklistTabStorageKey = 'truthwatcher.checklistTab'
-const appTabStorageKey = 'truthwatcher.appTab'
+const checklistTabStorageKey = `${storageKeyPrefix}.checklistTab`
+const appTabStorageKey = `${storageKeyPrefix}.appTab`
 const notificationPermission = ref(
   typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
 )
