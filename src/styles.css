@@ -760,8 +760,21 @@ input {
   border: 1px solid rgba(20, 35, 31, 0.08);
 }
 
+.settings-card-enabled {
+  background:
+    radial-gradient(circle at top right, rgba(194, 216, 152, 0.2), transparent 10rem),
+    #fff;
+}
+
 .settings-button {
   justify-self: start;
+}
+
+.settings-success {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #21453c;
 }
 
 .progress-card-shell {
@@ -776,6 +789,10 @@ input {
   max-width: 52rem;
   width: 100%;
   justify-self: center;
+}
+
+.progress-eyebrow {
+  text-align: center;
 }
 
 .cosmere-progress-card {

@@ -68,7 +68,7 @@ function handleEnableNotifications() {
   <section class="panel home-panel">
     <div class="home-progress-stage">
       <section class="progress-card-shell">
-        <p class="eyebrow">Cosmere Progress</p>
+        <p class="eyebrow progress-eyebrow">Cosmere Progress</p>
         <div class="cosmere-progress-card">
           <div class="progress-ring-wrap">
             <svg class="progress-ring" viewBox="0 0 140 140" aria-hidden="true">
@@ -120,14 +120,20 @@ function handleEnableNotifications() {
     </div>
 
     <div class="home-bottom-stack">
-      <section v-if="notificationPermission !== 'granted'" class="settings-card">
+      <section class="settings-card" :class="{ 'settings-card-enabled': notificationPermission === 'granted' }">
         <p class="eyebrow">Notifications</p>
-        <p class="auth-copy">
-          Enable notifications to follow writing progress updates for specific projects.
-        </p>
-        <button class="secondary-button settings-button" @click="handleEnableNotifications">
-          Enable notifications
-        </button>
+        <template v-if="notificationPermission === 'granted'">
+          <p class="settings-success">Notifications enabled</p>
+          <p class="auth-copy">You will receive progress and activity updates on this device.</p>
+        </template>
+        <template v-else>
+          <p class="auth-copy">
+            Enable notifications to follow writing progress updates for specific projects.
+          </p>
+          <button class="secondary-button settings-button" @click="handleEnableNotifications">
+            Enable notifications
+          </button>
+        </template>
       </section>
 
       <div v-if="isSignedIn" class="profile-card">
