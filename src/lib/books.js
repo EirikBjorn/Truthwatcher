@@ -15,6 +15,7 @@ export const PLANET_ORDER = [
   'Sel',
   'Taldain',
   'Threnody',
+  'Unknown',
 ]
 
 export const COSMERE_WORKS = [
@@ -298,6 +299,17 @@ export const COSMERE_WORKS = [
     eirikOrder: 28,
     durationLabel: '~8 hours',
   },
+  {
+    id: 'fires-of-december',
+    title: 'The Fires of December',
+    type: 'Novel',
+    planet: 'Unknown',
+    publicationOrder: 29,
+    releaseDateLabel: 'Dec 8, 2026',
+    eirikOrder: 29,
+    durationLabel: 'Unknown',
+    isReleased: false,
+  },
 ]
 
 const workById = new Map(COSMERE_WORKS.map((work) => [work.id, work]))
@@ -307,22 +319,38 @@ const SERIES_META = {
     slug: 'mistborn',
     label: 'Mistborn',
     shortLabel: 'MB',
+    themeSlug: 'mistborn',
   },
   stormlight: {
     slug: 'stormlight',
     label: 'Stormlight',
     shortLabel: 'SA',
+    themeSlug: 'stormlight',
   },
   elantris: {
     slug: 'elantris',
     label: 'Elantris',
     shortLabel: 'EL',
+    themeSlug: 'elantris',
   },
   standalone: {
     slug: 'standalone',
     label: 'Standalone',
     shortLabel: 'ST',
+    themeSlug: 'standalone',
   },
+}
+
+const STANDALONE_THEME_BY_WORK_ID = {
+  warbreaker: 'warbreaker',
+  'shadows-for-silence': 'shadows',
+  'sixth-of-the-dusk': 'sixth',
+  'white-sand-omnibus': 'white-sand',
+  tress: 'tress',
+  yumi: 'yumi',
+  'sunlit-man': 'sunlit',
+  'isles-of-the-emberdark': 'emberdark',
+  'fires-of-december': 'fires',
 }
 
 export function getWorkById(id) {
@@ -349,7 +377,10 @@ export function getWorkSeriesMeta(work) {
     return SERIES_META.elantris
   }
 
-  return SERIES_META.standalone
+  return {
+    ...SERIES_META.standalone,
+    themeSlug: STANDALONE_THEME_BY_WORK_ID[id] ?? SERIES_META.standalone.themeSlug,
+  }
 }
 
 export function getWorkDurationHours(work) {
@@ -358,17 +389,23 @@ export function getWorkDurationHours(work) {
   return match ? Number(match[1]) : 0
 }
 
+export function isWorkReleased(work) {
+  return Boolean(work) && work.isReleased !== false
+}
+
 export function calculateCosmereProgress(readingList = []) {
-  const totalHours = COSMERE_WORKS.reduce((sum, work) => sum + getWorkDurationHours(work), 0)
-  const completedBooks = readingList.filter((work) => work.completed).length
-  const novels = readingList.filter((work) => work.type === 'Novel')
-  const novellas = readingList.filter((work) => work.type === 'Novella')
-  const shortStories = readingList.filter((work) => work.type === 'Short Story')
-  const totalPlanets = new Set(COSMERE_WORKS.map((work) => work.planet)).size
+  const releasedWorks = COSMERE_WORKS.filter(isWorkReleased)
+  const releasedReadingList = readingList.filter(isWorkReleased)
+  const totalHours = releasedWorks.reduce((sum, work) => sum + getWorkDurationHours(work), 0)
+  const completedBooks = releasedReadingList.filter((work) => work.completed).length
+  const novels = releasedReadingList.filter((work) => work.type === 'Novel')
+  const novellas = releasedReadingList.filter((work) => work.type === 'Novella')
+  const shortStories = releasedReadingList.filter((work) => work.type === 'Short Story')
+  const totalPlanets = new Set(releasedWorks.map((work) => work.planet)).size
   const completedPlanets = new Set(
-    readingList.filter((work) => work.completed).map((work) => work.planet),
+    releasedReadingList.filter((work) => work.completed).map((work) => work.planet),
   ).size
-  const completedHours = readingList
+  const completedHours = releasedReadingList
     .filter((work) => work.completed)
     .reduce((sum, work) => sum + getWorkDurationHours(work), 0)
   const remainingHours = Math.max(totalHours - completedHours, 0)
@@ -376,7 +413,7 @@ export function calculateCosmereProgress(readingList = []) {
 
   return {
     completedBooks,
-    totalBooks: COSMERE_WORKS.length,
+    totalBooks: releasedWorks.length,
     completedNovels: novels.filter((work) => work.completed).length,
     totalNovels: novels.length,
     completedNovellas: novellas.filter((work) => work.completed).length,

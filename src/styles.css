@@ -267,6 +267,14 @@ input {
   border-color: rgba(111, 145, 84, 0.22);
 }
 
+.checklist-item.unreleased {
+  background:
+    radial-gradient(circle at top right, rgba(132, 146, 168, 0.3), transparent 10rem),
+    linear-gradient(180deg, rgba(245, 242, 238, 0.98), rgba(233, 228, 221, 0.98));
+  border-style: dashed;
+  border-color: rgba(85, 99, 119, 0.28);
+}
+
 .checklist-checkbox {
   appearance: none;
   width: 1.3rem;
@@ -384,10 +392,75 @@ input {
   --series-chip-color: #6b5648;
 }
 
+.checklist-item.theme-warbreaker {
+  --series-accent: rgba(182, 86, 114, 0.48);
+  --series-chip-background: rgba(249, 232, 238, 0.96);
+  --series-chip-color: #9a3f5b;
+}
+
+.checklist-item.theme-shadows {
+  --series-accent: rgba(76, 82, 100, 0.5);
+  --series-chip-background: rgba(232, 235, 242, 0.96);
+  --series-chip-color: #485265;
+}
+
+.checklist-item.theme-sixth {
+  --series-accent: rgba(56, 118, 111, 0.5);
+  --series-chip-background: rgba(227, 243, 239, 0.96);
+  --series-chip-color: #266b63;
+}
+
+.checklist-item.theme-white-sand {
+  --series-accent: rgba(176, 142, 92, 0.46);
+  --series-chip-background: rgba(245, 238, 223, 0.96);
+  --series-chip-color: #876738;
+}
+
+.checklist-item.theme-tress {
+  --series-accent: rgba(62, 140, 99, 0.48);
+  --series-chip-background: rgba(228, 244, 233, 0.96);
+  --series-chip-color: #2a7a4f;
+}
+
+.checklist-item.theme-yumi {
+  --series-accent: rgba(122, 92, 160, 0.48);
+  --series-chip-background: rgba(237, 232, 245, 0.96);
+  --series-chip-color: #6c4d98;
+}
+
+.checklist-item.theme-sunlit {
+  --series-accent: rgba(201, 112, 54, 0.5);
+  --series-chip-background: rgba(249, 236, 225, 0.96);
+  --series-chip-color: #a85824;
+}
+
+.checklist-item.theme-emberdark {
+  --series-accent: rgba(34, 93, 120, 0.5);
+  --series-chip-background: rgba(226, 238, 244, 0.96);
+  --series-chip-color: #255c76;
+}
+
+.checklist-item.theme-fires {
+  --series-accent: rgba(184, 61, 39, 0.54);
+  --series-chip-background: rgba(250, 231, 224, 0.96);
+  --series-chip-color: #a53a25;
+}
+
 .checklist-title {
   font-size: 1.02rem;
   line-height: 1.25;
   color: #1b2b27;
+}
+
+.checklist-status-pill {
+  justify-self: start;
+  padding: 0.16rem 0.46rem;
+  border-radius: 999px;
+  background: rgba(201, 210, 223, 0.92);
+  color: #3f4f64;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .checklist-meta {
@@ -743,6 +816,60 @@ input {
   --series-accent: rgba(116, 93, 76, 0.26);
   --series-chip-background: rgba(239, 233, 226, 0.96);
   --series-chip-color: #6b5648;
+}
+
+.current-reading-card.theme-warbreaker {
+  --series-accent: rgba(182, 86, 114, 0.3);
+  --series-chip-background: rgba(249, 232, 238, 0.96);
+  --series-chip-color: #9a3f5b;
+}
+
+.current-reading-card.theme-shadows {
+  --series-accent: rgba(76, 82, 100, 0.32);
+  --series-chip-background: rgba(232, 235, 242, 0.96);
+  --series-chip-color: #485265;
+}
+
+.current-reading-card.theme-sixth {
+  --series-accent: rgba(56, 118, 111, 0.32);
+  --series-chip-background: rgba(227, 243, 239, 0.96);
+  --series-chip-color: #266b63;
+}
+
+.current-reading-card.theme-white-sand {
+  --series-accent: rgba(176, 142, 92, 0.3);
+  --series-chip-background: rgba(245, 238, 223, 0.96);
+  --series-chip-color: #876738;
+}
+
+.current-reading-card.theme-tress {
+  --series-accent: rgba(62, 140, 99, 0.3);
+  --series-chip-background: rgba(228, 244, 233, 0.96);
+  --series-chip-color: #2a7a4f;
+}
+
+.current-reading-card.theme-yumi {
+  --series-accent: rgba(122, 92, 160, 0.3);
+  --series-chip-background: rgba(237, 232, 245, 0.96);
+  --series-chip-color: #6c4d98;
+}
+
+.current-reading-card.theme-sunlit {
+  --series-accent: rgba(201, 112, 54, 0.32);
+  --series-chip-background: rgba(249, 236, 225, 0.96);
+  --series-chip-color: #a85824;
+}
+
+.current-reading-card.theme-emberdark {
+  --series-accent: rgba(34, 93, 120, 0.32);
+  --series-chip-background: rgba(226, 238, 244, 0.96);
+  --series-chip-color: #255c76;
+}
+
+.current-reading-card.theme-fires {
+  --series-accent: rgba(184, 61, 39, 0.36);
+  --series-chip-background: rgba(250, 231, 224, 0.96);
+  --series-chip-color: #a53a25;
 }
 
 .current-reading-card-top,

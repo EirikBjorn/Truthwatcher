@@ -11,6 +11,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  unreleasedBooks: {
+    type: Number,
+    required: true,
+  },
   isSignedIn: {
     type: Boolean,
     required: true,
@@ -54,7 +58,10 @@ function handleToggleCurrentListening(bookId) {
     <div class="section-header">
       <div>
         <p class="eyebrow">Reading Checklist</p>
-        <h2>{{ completedBooks }}/{{ readingListLength }} completed</h2>
+        <h2>
+          {{ completedBooks }}/{{ readingListLength }} completed
+          <template v-if="unreleasedBooks"> · {{ unreleasedBooks }} unreleased</template>
+        </h2>
       </div>
     </div>
 

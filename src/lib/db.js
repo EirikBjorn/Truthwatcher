@@ -1,4 +1,4 @@
-import { COSMERE_WORKS, getWorkSeriesMeta } from './books'
+import { COSMERE_WORKS, getWorkSeriesMeta, isWorkReleased } from './books'
 import {
   fetchCurrentlyReadingItems,
   fetchReadingChecklistItems,
@@ -27,15 +27,17 @@ function buildReadingList(
 
   return COSMERE_WORKS.map((work) => {
     const currentState = currentStateByWork[work.id] ?? {}
+    const isReleased = isWorkReleased(work)
 
     return {
       ...work,
       ...getWorkSeriesMeta(work),
-      completed: completedSet.has(work.id),
-      isCurrentlyReading: Boolean(currentState.reading),
-      startedReadingAt: currentState.reading ?? null,
-      isCurrentlyListening: Boolean(currentState.listening),
-      startedListeningAt: currentState.listening ?? null,
+      isReleased,
+      completed: isReleased && completedSet.has(work.id),
+      isCurrentlyReading: isReleased && Boolean(currentState.reading),
+      startedReadingAt: isReleased ? currentState.reading ?? null : null,
+      isCurrentlyListening: isReleased && Boolean(currentState.listening),
+      startedListeningAt: isReleased ? currentState.listening ?? null : null,
       readers: [...(readersByWork[work.id] ?? [])]
         .sort((left, right) => {
           if (left.id === currentUserId && right.id !== currentUserId) {
@@ -87,6 +89,10 @@ export async function setReadingItemCompleted({ id, completed, user }) {
     throw new Error(`Missing reading list item: ${id}`)
   }
 
+  if (!isWorkReleased(item)) {
+    throw new Error(`${item.title} is not released yet.`)
+  }
+
   await syncCurrentProfile(user)
   await saveReadingChecklistItem({
     workId: id,
@@ -113,6 +119,10 @@ export async function setReadingItemCurrentState({
 
   if (!item) {
     throw new Error(`Missing reading list item: ${id}`)
+  }
+
+  if (!isWorkReleased(item)) {
+    throw new Error(`${item.title} is not released yet.`)
   }
 
   await syncCurrentProfile(user)

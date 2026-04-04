@@ -66,12 +66,19 @@ function handleCurrentListeningToggle() {
 </script>
 
 <template>
-  <div class="checklist-item" :class="[`series-${item.slug}`, { completed: item.completed }]">
+  <div
+    class="checklist-item"
+    :class="[
+      `series-${item.slug}`,
+      item.themeSlug && `theme-${item.themeSlug}`,
+      { completed: item.completed, unreleased: !item.isReleased },
+    ]"
+  >
     <input
       class="checklist-checkbox"
       type="checkbox"
       :checked="item.completed"
-      :disabled="disabled"
+      :disabled="disabled || !item.isReleased"
       :aria-label="`Mark ${item.title} as read`"
       @change="handleToggle"
     />
@@ -81,6 +88,7 @@ function handleCurrentListeningToggle() {
         <span>{{ item.label }}</span>
       </span>
       <span class="checklist-title">{{ item.title }}</span>
+      <span v-if="!item.isReleased" class="checklist-status-pill">Unreleased</span>
       <span class="checklist-meta">{{ meta }}</span>
       <span v-if="item.readers?.length" class="checklist-footer">
         <span class="checklist-readers-label">Read by</span>
@@ -108,13 +116,13 @@ function handleCurrentListeningToggle() {
       <span class="checklist-reading-state">
         <label
           class="reading-state-toggle"
-          :class="{ active: item.isCurrentlyReading, disabled }"
+          :class="{ active: item.isCurrentlyReading, disabled: disabled || !item.isReleased }"
         >
           <input
             class="reading-state-checkbox"
             type="checkbox"
             :checked="item.isCurrentlyReading"
-            :disabled="disabled"
+            :disabled="disabled || !item.isReleased"
             :aria-label="`Mark ${item.title} as currently reading`"
             @change="handleCurrentReadingToggle"
           />
@@ -132,13 +140,13 @@ function handleCurrentListeningToggle() {
 
         <label
           class="reading-state-toggle"
-          :class="{ active: item.isCurrentlyListening, disabled }"
+          :class="{ active: item.isCurrentlyListening, disabled: disabled || !item.isReleased }"
         >
           <input
             class="reading-state-checkbox"
             type="checkbox"
             :checked="item.isCurrentlyListening"
-            :disabled="disabled"
+            :disabled="disabled || !item.isReleased"
             :aria-label="`Mark ${item.title} as currently listening`"
             @change="handleCurrentListeningToggle"
           />
