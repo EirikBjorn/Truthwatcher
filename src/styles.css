@@ -461,6 +461,10 @@ input {
 }
 
 .checklist-reading-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-start;
   margin-top: 0.45rem;
 }
 
@@ -796,9 +800,39 @@ input {
   line-height: 1.15;
 }
 
+.current-reading-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .current-reading-profile-copy p {
   color: #5f7069;
   font-size: 0.9rem;
+}
+
+.current-reading-mode-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.current-reading-mode-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(20, 35, 31, 0.08);
+  color: #25463d;
+}
+
+.current-reading-mode-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .current-reading-kicker {
@@ -852,6 +886,39 @@ input {
 .current-reading-time {
   color: #64766f;
   font-size: 0.84rem;
+}
+
+.current-reading-sidecar {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(20, 35, 31, 0.06);
+}
+
+.current-reading-sidecar-label,
+.current-reading-sidecar-title,
+.current-reading-sidecar-time {
+  margin: 0;
+}
+
+.current-reading-sidecar-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6c7e77;
+}
+
+.current-reading-sidecar-title {
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  color: #1b2b27;
+  font-size: 1rem;
+}
+
+.current-reading-sidecar-time {
+  color: #64766f;
+  font-size: 0.82rem;
 }
 
 .current-reading-idle-state {
@@ -1188,6 +1255,10 @@ input {
     font-size: 0.98rem;
     line-height: 1.1;
     overflow-wrap: anywhere;
+  }
+
+  .current-reading-status-row {
+    gap: 0.35rem;
   }
 
   .current-reading-book h4 {

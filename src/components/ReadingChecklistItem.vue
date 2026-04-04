@@ -16,29 +16,41 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['toggle', 'toggle-current-reading'])
+const emit = defineEmits(['toggle', 'toggle-current-reading', 'toggle-current-listening'])
 
 const visibleReaders = computed(() => props.item.readers?.slice(0, 4) ?? [])
 const extraReaderCount = computed(() => Math.max((props.item.readers?.length ?? 0) - 4, 0))
-const startedReadingLabel = computed(() => {
-  if (!props.item.startedReadingAt) {
+
+function formatStartedLabel(value, mode) {
+  if (!value) {
     return ''
   }
 
-  const startedDate = new Date(props.item.startedReadingAt)
+  const startedDate = new Date(value)
   const today = new Date()
   const isSameDay =
     startedDate.getFullYear() === today.getFullYear() &&
     startedDate.getMonth() === today.getMonth() &&
     startedDate.getDate() === today.getDate()
 
-  return isSameDay
-    ? 'Started today'
-    : `Started ${startedDate.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      })}`
-})
+  if (isSameDay) {
+    return mode === 'listening' ? 'Started listening today' : 'Started today'
+  }
+
+  const prefix = mode === 'listening' ? 'Started listening' : 'Started'
+
+  return `${prefix} ${startedDate.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })}`
+}
+
+const startedReadingLabel = computed(() =>
+  formatStartedLabel(props.item.startedReadingAt, 'reading'),
+)
+const startedListeningLabel = computed(() =>
+  formatStartedLabel(props.item.startedListeningAt, 'listening'),
+)
 
 function handleToggle() {
   emit('toggle', props.item.id)
@@ -46,6 +58,10 @@ function handleToggle() {
 
 function handleCurrentReadingToggle() {
   emit('toggle-current-reading', props.item.id)
+}
+
+function handleCurrentListeningToggle() {
+  emit('toggle-current-listening', props.item.id)
 }
 </script>
 
@@ -92,13 +108,13 @@ function handleCurrentReadingToggle() {
       <span class="checklist-reading-state">
         <label
           class="reading-state-toggle"
-          :class="{ active: item.isCurrentlyReading, disabled: disabled || item.completed }"
+          :class="{ active: item.isCurrentlyReading, disabled }"
         >
           <input
             class="reading-state-checkbox"
             type="checkbox"
             :checked="item.isCurrentlyReading"
-            :disabled="disabled || item.completed"
+            :disabled="disabled"
             :aria-label="`Mark ${item.title} as currently reading`"
             @change="handleCurrentReadingToggle"
           />
@@ -110,6 +126,30 @@ function handleCurrentReadingToggle() {
               class="reading-state-meta"
             >
               {{ startedReadingLabel }}
+            </span>
+          </span>
+        </label>
+
+        <label
+          class="reading-state-toggle"
+          :class="{ active: item.isCurrentlyListening, disabled }"
+        >
+          <input
+            class="reading-state-checkbox"
+            type="checkbox"
+            :checked="item.isCurrentlyListening"
+            :disabled="disabled"
+            :aria-label="`Mark ${item.title} as currently listening`"
+            @change="handleCurrentListeningToggle"
+          />
+          <span class="reading-state-indicator" aria-hidden="true"></span>
+          <span class="reading-state-copy">
+            <span class="reading-state-label">Currently listening</span>
+            <span
+              v-if="item.isCurrentlyListening && startedListeningLabel"
+              class="reading-state-meta"
+            >
+              {{ startedListeningLabel }}
             </span>
           </span>
         </label>

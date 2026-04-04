@@ -29,10 +29,14 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle-activity-notifications'])
-const activeTab = ref('activity')
+const activeTab = ref('current')
 
 function getActivityVerb(type) {
-  return type === 'finished' ? 'just finished' : 'is reading'
+  if (type === 'finished') {
+    return 'just finished'
+  }
+
+  return type === 'listening' ? 'is listening to' : 'is reading'
 }
 
 function formatOccurredAt(type, value) {
@@ -44,16 +48,34 @@ function formatOccurredAt(type, value) {
     date.getDate() === today.getDate()
 
   if (isSameDay) {
-    return type === 'finished' ? 'Finished today' : 'Started today'
+    if (type === 'finished') {
+      return 'Finished today'
+    }
+
+    return type === 'listening' ? 'Started listening today' : 'Started today'
   }
 
-  return `${type === 'finished' ? 'Finished' : 'Started'} ${date.toLocaleDateString(undefined, {
+  if (type === 'finished') {
+    return `Finished ${date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })}`
+  }
+
+  if (type === 'listening') {
+    return `Started listening ${date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })}`
+  }
+
+  return `Started ${date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   })}`
 }
 
-function formatStartedAt(value) {
+function formatStartedAt(value, mode = 'reading') {
   const date = new Date(value)
   const today = new Date()
   const isSameDay =
@@ -62,13 +84,31 @@ function formatStartedAt(value) {
     date.getDate() === today.getDate()
 
   if (isSameDay) {
-    return 'Started today'
+    return mode === 'listening' ? 'Started listening today' : 'Started today'
   }
 
-  return `Started ${date.toLocaleDateString(undefined, {
+  const prefix = mode === 'listening' ? 'Started listening' : 'Started'
+
+  return `${prefix} ${date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   })}`
+}
+
+function getCurrentStatus(item) {
+  if (item.isCurrentlyReading) {
+    return 'Currently reading'
+  }
+
+  if (item.isCurrentlyListening) {
+    return 'Currently listening'
+  }
+
+  return 'Not reading right now'
+}
+
+function getCurrentKicker(item) {
+  return item.currentMode === 'listening' ? 'Current audiobook' : 'Current book'
 }
 
 function handleToggle(event) {
@@ -100,7 +140,7 @@ function handleToggle(event) {
           {{
             notificationSupported
               ? notificationPermission === 'granted'
-                ? 'Get a notification when someone starts or finishes a book.'
+                ? 'Get a notification when someone starts reading, starts listening, or finishes a book.'
                 : 'Turn this on to allow browser notifications for new reading activity.'
               : 'This browser does not support push notifications.'
           }}
@@ -128,24 +168,26 @@ function handleToggle(event) {
     <div v-if="isSignedIn" class="tab-row" role="tablist" aria-label="Activity views">
       <button
         class="tab-button"
-        :class="{ active: activeTab === 'activity' }"
-        type="button"
-        @click="activeTab = 'activity'"
-      >
-        Activity
-      </button>
-      <button
-        class="tab-button"
         :class="{ active: activeTab === 'current' }"
         type="button"
         @click="activeTab = 'current'"
       >
         Currently Reading
       </button>
+      <button
+        class="tab-button"
+        :class="{ active: activeTab === 'activity' }"
+        type="button"
+        @click="activeTab = 'activity'"
+      >
+        Activity
+      </button>
     </div>
 
     <div v-if="isSignedIn && activeTab === 'activity' && !activityItems.length" class="empty-state">
-      <p class="auth-copy">No reading activity yet. New starts and finishes will show up here.</p>
+      <p class="auth-copy">
+        No reading activity yet. New starts, listening updates, and finishes will show up here.
+      </p>
     </div>
 
     <div v-else-if="isSignedIn && activeTab === 'activity'" class="activity-list">
@@ -177,7 +219,7 @@ function handleToggle(event) {
         v-for="item in currentReadingItems"
         :key="item.id"
         class="current-reading-card"
-        :class="[{ idle: !item.isCurrentlyReading }, item.seriesSlug && `series-${item.seriesSlug}`]"
+        :class="[{ idle: !item.hasCurrentActivity }, item.seriesSlug && `series-${item.seriesSlug}`]"
       >
         <div class="current-reading-card-top">
           <div class="current-reading-profile">
@@ -194,13 +236,68 @@ function handleToggle(event) {
 
             <div class="current-reading-profile-copy">
               <h3>{{ item.displayName }}</h3>
-              <p>{{ item.isCurrentlyReading ? 'Currently reading' : 'Not reading right now' }}</p>
+              <div class="current-reading-status-row">
+                <p>{{ getCurrentStatus(item) }}</p>
+                <span v-if="item.hasCurrentActivity" class="current-reading-mode-icons">
+                  <span
+                    v-if="item.isCurrentlyReading"
+                    class="current-reading-mode-icon"
+                    title="Reading"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                      <path
+                        d="M4.75 5.5A2.75 2.75 0 0 1 7.5 2.75H20v15.5H7.5a2.75 2.75 0 0 0-2.75 2.75z"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.8"
+                      />
+                      <path
+                        d="M7.5 2.75v18.25M10.5 7.25h5.5M10.5 10.75h5.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.8"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    v-if="item.isCurrentlyListening"
+                    class="current-reading-mode-icon"
+                    title="Listening"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                      <path
+                        d="M5.75 13.25v2.5a2 2 0 0 0 2 2h1.5v-5h-1.5a2 2 0 0 0-2 2zm9 0v5h1.5a2 2 0 0 0 2-2v-2.5a2 2 0 0 0-2-2zM8.75 12.75v-1.5a3.25 3.25 0 1 1 6.5 0v1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.8"
+                      />
+                    </svg>
+                  </span>
+                  <span class="sr-only">
+                    {{
+                      item.isCurrentlyReading && item.isCurrentlyListening
+                        ? 'Currently reading and listening'
+                        : item.isCurrentlyListening
+                          ? 'Currently listening'
+                          : 'Currently reading'
+                    }}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div v-if="item.isCurrentlyReading" class="current-reading-book">
-          <p class="current-reading-kicker">Current book</p>
+        <div v-if="item.hasCurrentActivity" class="current-reading-book">
+          <p class="current-reading-kicker">{{ getCurrentKicker(item) }}</p>
           <h4>{{ item.bookTitle }}</h4>
 
           <div class="current-reading-chip-row">
@@ -214,8 +311,16 @@ function handleToggle(event) {
           </div>
 
           <p class="current-reading-time">
-            {{ formatStartedAt(item.startedAt) }} · {{ item.durationLabel }}
+            {{ formatStartedAt(item.startedAt, item.currentMode) }} · {{ item.durationLabel }}
           </p>
+
+          <div v-if="item.additionalListeningBookTitle" class="current-reading-sidecar">
+            <p class="current-reading-sidecar-label">Also listening to</p>
+            <p class="current-reading-sidecar-title">{{ item.additionalListeningBookTitle }}</p>
+            <p class="current-reading-sidecar-time">
+              {{ formatStartedAt(item.additionalListeningStartedAt, 'listening') }}
+            </p>
+          </div>
         </div>
 
         <div v-else class="current-reading-idle-state">

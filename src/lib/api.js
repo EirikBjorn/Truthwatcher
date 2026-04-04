@@ -2,6 +2,8 @@ import { supabase } from './supabase'
 import { tables } from './tables'
 import { getWorkById, getWorkSeriesMeta } from './books'
 
+const CURRENT_ENGAGEMENT_TYPES = new Set(['reading', 'listening'])
+
 function getUserDisplayName(user) {
   const metadata = user?.user_metadata ?? {}
 
@@ -225,10 +227,9 @@ export async function fetchCurrentlyReadingItems(userId) {
 
   const { data, error } = await supabase
     .from(tables.currentlyReadingItems)
-    .select('work_id, started_at')
+    .select('work_id, started_at, engagement_type')
     .eq('user_id', userId)
     .order('started_at', { ascending: false })
-    .limit(1)
 
   if (error) {
     throw error
@@ -240,7 +241,7 @@ export async function fetchCurrentlyReadingItems(userId) {
 export async function fetchCurrentReadingFeed() {
   const { data: currentRows, error } = await supabase
     .from(tables.currentlyReadingItems)
-    .select('id, user_id, work_id, started_at')
+    .select('id, user_id, work_id, engagement_type, started_at')
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -259,16 +260,39 @@ export async function fetchCurrentReadingFeed() {
   const currentByUserId = new Map()
 
   for (const row of currentRows ?? []) {
-    if (!currentByUserId.has(row.user_id)) {
-      currentByUserId.set(row.user_id, row)
+    if (!CURRENT_ENGAGEMENT_TYPES.has(row.engagement_type)) {
+      continue
+    }
+
+    const currentModes = currentByUserId.get(row.user_id) ?? {}
+
+    if (!currentModes[row.engagement_type]) {
+      currentModes[row.engagement_type] = row
+      currentByUserId.set(row.user_id, currentModes)
     }
   }
 
   return (profiles ?? [])
     .map((profile) => {
-      const row = currentByUserId.get(profile.id)
-      const work = row ? getWorkById(row.work_id) : null
-      const series = work ? getWorkSeriesMeta(work) : null
+      const currentModes = currentByUserId.get(profile.id) ?? {}
+      const readingRow = currentModes.reading ?? null
+      const listeningRow = currentModes.listening ?? null
+      const readingWork = readingRow ? getWorkById(readingRow.work_id) : null
+      const listeningWork = listeningRow ? getWorkById(listeningRow.work_id) : null
+      const hasReading = Boolean(readingRow && readingWork)
+      const hasListening = Boolean(listeningRow && listeningWork)
+      const primaryRow = hasReading ? readingRow : hasListening ? listeningRow : null
+      const primaryWork = hasReading ? readingWork : hasListening ? listeningWork : null
+      const primarySeries = primaryWork ? getWorkSeriesMeta(primaryWork) : null
+      const hasSharedCurrentWork =
+        hasReading &&
+        hasListening &&
+        readingWork.id === listeningWork.id
+      const additionalListeningWork =
+        hasReading && hasListening && !hasSharedCurrentWork ? listeningWork : null
+      const latestStartedAt = [readingRow?.started_at, listeningRow?.started_at]
+        .filter(Boolean)
+        .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0] ?? null
 
       return {
         id: `current-profile:${profile.id}`,
@@ -276,26 +300,36 @@ export async function fetchCurrentReadingFeed() {
         firstName: profile.display_name.split(/\s+/)[0] || profile.display_name,
         displayName: profile.display_name,
         avatarUrl: profile.avatar_url,
-        isCurrentlyReading: Boolean(row && work),
-        workId: work?.id ?? null,
-        bookTitle: work?.title ?? '',
-        publicationOrder: work?.publicationOrder ?? null,
-        bookType: work?.type ?? '',
-        planet: work?.planet ?? '',
-        durationLabel: work?.durationLabel ?? '',
-        seriesSlug: series?.slug ?? '',
-        seriesLabel: series?.label ?? '',
-        seriesShortLabel: series?.shortLabel ?? '',
-        startedAt: row?.started_at ?? null,
+        hasCurrentActivity: hasReading || hasListening,
+        isCurrentlyReading: hasReading,
+        isCurrentlyListening: hasListening,
+        currentMode: hasReading ? 'reading' : hasListening ? 'listening' : null,
+        hasSharedCurrentWork,
+        workId: primaryWork?.id ?? null,
+        bookTitle: primaryWork?.title ?? '',
+        publicationOrder: primaryWork?.publicationOrder ?? null,
+        bookType: primaryWork?.type ?? '',
+        planet: primaryWork?.planet ?? '',
+        durationLabel: primaryWork?.durationLabel ?? '',
+        seriesSlug: primarySeries?.slug ?? '',
+        seriesLabel: primarySeries?.label ?? '',
+        seriesShortLabel: primarySeries?.shortLabel ?? '',
+        startedAt: primaryRow?.started_at ?? null,
+        latestStartedAt,
+        additionalListeningBookTitle: additionalListeningWork?.title ?? '',
+        additionalListeningStartedAt: additionalListeningWork ? listeningRow.started_at : null,
       }
     })
     .sort((left, right) => {
-      if (left.isCurrentlyReading !== right.isCurrentlyReading) {
-        return left.isCurrentlyReading ? -1 : 1
+      if (left.hasCurrentActivity !== right.hasCurrentActivity) {
+        return left.hasCurrentActivity ? -1 : 1
       }
 
-      if (left.isCurrentlyReading && right.isCurrentlyReading) {
-        return new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime()
+      if (left.hasCurrentActivity && right.hasCurrentActivity) {
+        return (
+          new Date(right.latestStartedAt ?? 0).getTime() -
+          new Date(left.latestStartedAt ?? 0).getTime()
+        )
       }
 
       return left.displayName.localeCompare(right.displayName)
@@ -449,16 +483,6 @@ export async function saveReadingChecklistItem({ workId, completed }) {
     throw new Error('A work id is required before saving reading progress.')
   }
 
-  if (!completed) {
-    const { error } = await supabase.from(tables.readingChecklistItems).delete().eq('work_id', workId)
-
-    if (error) {
-      throw error
-    }
-
-    return
-  }
-
   const {
     data: { user },
     error: userError,
@@ -470,6 +494,20 @@ export async function saveReadingChecklistItem({ workId, completed }) {
 
   if (!user) {
     throw new Error('You must be signed in to save your checklist.')
+  }
+
+  if (!completed) {
+    const { error } = await supabase
+      .from(tables.readingChecklistItems)
+      .delete()
+      .eq('user_id', user.id)
+      .eq('work_id', workId)
+
+    if (error) {
+      throw error
+    }
+
+    return
   }
 
   const { error } = await supabase.from(tables.readingChecklistItems).upsert(
@@ -489,9 +527,17 @@ export async function saveReadingChecklistItem({ workId, completed }) {
   }
 }
 
-export async function saveCurrentlyReadingItem({ workId, reading }) {
+export async function saveCurrentlyReadingItem({
+  workId,
+  reading,
+  engagementType = 'reading',
+}) {
   if (!workId) {
     throw new Error('A work id is required before saving current reading state.')
+  }
+
+  if (!CURRENT_ENGAGEMENT_TYPES.has(engagementType)) {
+    throw new Error(`Unsupported current reading state: ${engagementType}`)
   }
 
   const {
@@ -512,6 +558,7 @@ export async function saveCurrentlyReadingItem({ workId, reading }) {
       .from(tables.currentlyReadingItems)
       .delete()
       .eq('user_id', user.id)
+      .eq('engagement_type', engagementType)
 
     if (error) {
       throw error
@@ -525,6 +572,7 @@ export async function saveCurrentlyReadingItem({ workId, reading }) {
     .from(tables.currentlyReadingItems)
     .delete()
     .eq('user_id', user.id)
+    .eq('engagement_type', engagementType)
 
   if (deleteError) {
     throw deleteError
@@ -533,6 +581,7 @@ export async function saveCurrentlyReadingItem({ workId, reading }) {
   const { error } = await supabase.from(tables.currentlyReadingItems).insert({
     user_id: user.id,
     work_id: workId,
+    engagement_type: engagementType,
     started_at: now,
     updated_at: now,
   })
