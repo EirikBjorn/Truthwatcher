@@ -49,6 +49,24 @@ alter column endpoint drop not null;
 alter table public.project_subscriptions
 alter column subscription drop not null;
 
+with ranked_project_subscriptions as (
+  select
+    project_subscriptions.id,
+    row_number() over (
+      partition by coalesce(project_subscriptions.user_id, push_subscriptions.user_id), project_subscriptions.project_slug
+      order by project_subscriptions.updated_at desc, project_subscriptions.created_at desc, project_subscriptions.id desc
+    ) as duplicate_rank
+  from public.project_subscriptions as project_subscriptions
+  left join public.push_subscriptions as push_subscriptions
+    on push_subscriptions.endpoint = project_subscriptions.endpoint
+  where coalesce(project_subscriptions.user_id, push_subscriptions.user_id) is not null
+)
+delete from public.project_subscriptions as project_subscriptions
+using ranked_project_subscriptions
+where
+  project_subscriptions.id = ranked_project_subscriptions.id and
+  ranked_project_subscriptions.duplicate_rank > 1;
+
 update public.project_subscriptions as project_subscriptions
 set user_id = push_subscriptions.user_id
 from public.push_subscriptions as push_subscriptions
@@ -86,11 +104,32 @@ create table if not exists public.currently_reading_items (
   work_id text not null,
   started_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (user_id, work_id)
+  unique (user_id)
 );
+
+alter table public.currently_reading_items
+drop constraint if exists currently_reading_items_user_id_work_id_key;
+
+with ranked_currently_reading_items as (
+  select
+    id,
+    row_number() over (
+      partition by user_id
+      order by started_at desc, updated_at desc, id desc
+    ) as duplicate_rank
+  from public.currently_reading_items
+)
+delete from public.currently_reading_items as currently_reading_items
+using ranked_currently_reading_items
+where
+  currently_reading_items.id = ranked_currently_reading_items.id and
+  ranked_currently_reading_items.duplicate_rank > 1;
 
 create index if not exists currently_reading_items_started_at_idx
 on public.currently_reading_items (started_at desc);
+
+create unique index if not exists currently_reading_items_user_id_idx
+on public.currently_reading_items (user_id);
 
 create table if not exists public.activity_events (
   id bigint generated always as identity primary key,
@@ -291,6 +330,24 @@ alter column endpoint drop not null;
 alter table public.dev_project_subscriptions
 alter column subscription drop not null;
 
+with ranked_dev_project_subscriptions as (
+  select
+    project_subscriptions.id,
+    row_number() over (
+      partition by coalesce(project_subscriptions.user_id, push_subscriptions.user_id), project_subscriptions.project_slug
+      order by project_subscriptions.updated_at desc, project_subscriptions.created_at desc, project_subscriptions.id desc
+    ) as duplicate_rank
+  from public.dev_project_subscriptions as project_subscriptions
+  left join public.dev_push_subscriptions as push_subscriptions
+    on push_subscriptions.endpoint = project_subscriptions.endpoint
+  where coalesce(project_subscriptions.user_id, push_subscriptions.user_id) is not null
+)
+delete from public.dev_project_subscriptions as project_subscriptions
+using ranked_dev_project_subscriptions
+where
+  project_subscriptions.id = ranked_dev_project_subscriptions.id and
+  ranked_dev_project_subscriptions.duplicate_rank > 1;
+
 update public.dev_project_subscriptions as project_subscriptions
 set user_id = push_subscriptions.user_id
 from public.dev_push_subscriptions as push_subscriptions
@@ -328,11 +385,32 @@ create table if not exists public.dev_currently_reading_items (
   work_id text not null,
   started_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (user_id, work_id)
+  unique (user_id)
 );
+
+alter table public.dev_currently_reading_items
+drop constraint if exists dev_currently_reading_items_user_id_work_id_key;
+
+with ranked_dev_currently_reading_items as (
+  select
+    id,
+    row_number() over (
+      partition by user_id
+      order by started_at desc, updated_at desc, id desc
+    ) as duplicate_rank
+  from public.dev_currently_reading_items
+)
+delete from public.dev_currently_reading_items as dev_currently_reading_items
+using ranked_dev_currently_reading_items
+where
+  dev_currently_reading_items.id = ranked_dev_currently_reading_items.id and
+  ranked_dev_currently_reading_items.duplicate_rank > 1;
 
 create index if not exists dev_currently_reading_items_started_at_idx
 on public.dev_currently_reading_items (started_at desc);
+
+create unique index if not exists dev_currently_reading_items_user_id_idx
+on public.dev_currently_reading_items (user_id);
 
 create table if not exists public.dev_activity_events (
   id bigint generated always as identity primary key,

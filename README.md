@@ -4,4 +4,4 @@ Mobile app (PWA) that tracks Brandon Sanderson's book progress and sends notific
 
 Progress scraped from https://www.brandonsanderson.com/
 
-Dev environment setup: [docs/dev-environment.md](/Users/ebjorneseth/Documents/eirik/Truthwatcher/docs/dev-environment.md)
+**Mostly vibe coded**

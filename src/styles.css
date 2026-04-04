@@ -115,6 +115,7 @@ input {
 }
 
 .progress-card {
+  min-width: 0;
   padding: 1rem;
   border-radius: 1rem;
   background: #fff;
@@ -134,11 +135,17 @@ input {
   justify-content: space-between;
   gap: 0.75rem;
   align-items: start;
+  min-width: 0;
+}
+
+.progress-copy {
+  min-width: 0;
 }
 
 .progress-copy h3,
 .progress-copy p {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .completion-pill {
@@ -515,6 +522,12 @@ input {
   gap: 0.85rem;
 }
 
+.current-reading-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 .activity-settings {
   display: flex;
   align-items: center;
@@ -677,6 +690,191 @@ input {
 .activity-time {
   font-size: 0.82rem;
   color: #7a8a84;
+}
+
+.current-reading-card {
+  --series-accent: rgba(89, 112, 103, 0.28);
+  --series-chip-background: rgba(238, 243, 237, 0.92);
+  --series-chip-color: #355f53;
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.1rem;
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at top left, var(--series-accent), transparent 12rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 236, 0.98));
+  border: 1px solid rgba(20, 35, 31, 0.08);
+  box-shadow:
+    inset 0.22rem 0 0 var(--series-accent),
+    0 0.9rem 2.2rem rgba(20, 35, 31, 0.08);
+}
+
+.current-reading-card.idle {
+  background:
+    radial-gradient(circle at top left, rgba(219, 229, 221, 0.5), transparent 12rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(241, 236, 228, 0.94));
+  box-shadow: 0 0.9rem 2.2rem rgba(20, 35, 31, 0.06);
+}
+
+.current-reading-card.series-mistborn {
+  --series-accent: rgba(131, 88, 48, 0.3);
+  --series-chip-background: rgba(246, 236, 224, 0.96);
+  --series-chip-color: #7a4f2c;
+}
+
+.current-reading-card.series-stormlight {
+  --series-accent: rgba(75, 116, 138, 0.3);
+  --series-chip-background: rgba(229, 239, 243, 0.96);
+  --series-chip-color: #31586d;
+}
+
+.current-reading-card.series-elantris {
+  --series-accent: rgba(65, 123, 117, 0.3);
+  --series-chip-background: rgba(229, 242, 239, 0.96);
+  --series-chip-color: #2f6f68;
+}
+
+.current-reading-card.series-standalone {
+  --series-accent: rgba(116, 93, 76, 0.26);
+  --series-chip-background: rgba(239, 233, 226, 0.96);
+  --series-chip-color: #6b5648;
+}
+
+.current-reading-card-top,
+.current-reading-profile,
+.current-reading-chip-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.current-reading-card-top {
+  align-items: start;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.current-reading-profile {
+  align-items: center;
+  min-width: 0;
+}
+
+.current-reading-avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 1px solid var(--series-accent);
+  background: #dbe5dd;
+}
+
+.current-reading-profile-copy,
+.current-reading-book {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.current-reading-profile-copy h3,
+.current-reading-profile-copy p,
+.current-reading-book h4,
+.current-reading-kicker,
+.current-reading-time,
+.current-reading-idle-copy {
+  margin: 0;
+}
+
+.current-reading-profile-copy h3,
+.current-reading-book h4 {
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  color: #1b2b27;
+}
+
+.current-reading-profile-copy h3 {
+  font-size: 1.15rem;
+  line-height: 1.15;
+}
+
+.current-reading-profile-copy p {
+  color: #5f7069;
+  font-size: 0.9rem;
+}
+
+.current-reading-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #778882;
+}
+
+.current-reading-book h4 {
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.current-reading-chip-row {
+  flex-wrap: wrap;
+}
+
+.current-reading-series-chip,
+.current-reading-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(20, 35, 31, 0.06);
+  color: #355248;
+  font-size: 0.78rem;
+}
+
+.current-reading-series-chip {
+  gap: 0.42rem;
+  background: var(--series-chip-background);
+  color: var(--series-chip-color);
+}
+
+.current-reading-series-icon {
+  display: grid;
+  place-items: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px rgba(20, 35, 31, 0.06);
+}
+
+.current-reading-time {
+  color: #64766f;
+  font-size: 0.84rem;
+}
+
+.current-reading-idle-state {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px dashed rgba(104, 122, 114, 0.24);
+}
+
+.current-reading-idle-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: #c6d1cb;
+  box-shadow: 0 0 0 0.22rem rgba(219, 229, 221, 0.82);
+}
+
+.current-reading-idle-copy {
+  color: #60726b;
+  font-size: 0.92rem;
+  line-height: 1.35;
 }
 
 .profile-card,
@@ -886,7 +1084,7 @@ input {
 
 .progress-stat-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 0.15rem;
 }
@@ -963,6 +1161,43 @@ input {
     grid-template-columns: 1fr;
   }
 
+  .current-reading-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .current-reading-card {
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .current-reading-card-top {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .current-reading-profile {
+    align-items: start;
+  }
+
+  .current-reading-avatar {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .current-reading-profile-copy h3 {
+    font-size: 0.98rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .current-reading-book h4 {
+    font-size: 1.02rem;
+  }
+
+  .current-reading-time {
+    line-height: 1.35;
+  }
+
   .activity-settings {
     align-items: start;
   }
@@ -996,6 +1231,7 @@ input {
 
   .progress-stat-grid {
     width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .bottom-nav {

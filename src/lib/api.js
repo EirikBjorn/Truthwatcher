@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { tables } from './tables'
-import { getWorkById } from './books'
+import { getWorkById, getWorkSeriesMeta } from './books'
 
 function getUserDisplayName(user) {
   const metadata = user?.user_metadata ?? {}
@@ -227,12 +227,79 @@ export async function fetchCurrentlyReadingItems(userId) {
     .from(tables.currentlyReadingItems)
     .select('work_id, started_at')
     .eq('user_id', userId)
+    .order('started_at', { ascending: false })
+    .limit(1)
 
   if (error) {
     throw error
   }
 
   return data ?? []
+}
+
+export async function fetchCurrentReadingFeed() {
+  const { data: currentRows, error } = await supabase
+    .from(tables.currentlyReadingItems)
+    .select('id, user_id, work_id, started_at')
+    .order('started_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from(tables.profiles)
+    .select('id, display_name, avatar_url')
+    .order('display_name')
+
+  if (profilesError) {
+    throw profilesError
+  }
+
+  const currentByUserId = new Map()
+
+  for (const row of currentRows ?? []) {
+    if (!currentByUserId.has(row.user_id)) {
+      currentByUserId.set(row.user_id, row)
+    }
+  }
+
+  return (profiles ?? [])
+    .map((profile) => {
+      const row = currentByUserId.get(profile.id)
+      const work = row ? getWorkById(row.work_id) : null
+      const series = work ? getWorkSeriesMeta(work) : null
+
+      return {
+        id: `current-profile:${profile.id}`,
+        userId: profile.id,
+        firstName: profile.display_name.split(/\s+/)[0] || profile.display_name,
+        displayName: profile.display_name,
+        avatarUrl: profile.avatar_url,
+        isCurrentlyReading: Boolean(row && work),
+        workId: work?.id ?? null,
+        bookTitle: work?.title ?? '',
+        publicationOrder: work?.publicationOrder ?? null,
+        bookType: work?.type ?? '',
+        planet: work?.planet ?? '',
+        durationLabel: work?.durationLabel ?? '',
+        seriesSlug: series?.slug ?? '',
+        seriesLabel: series?.label ?? '',
+        seriesShortLabel: series?.shortLabel ?? '',
+        startedAt: row?.started_at ?? null,
+      }
+    })
+    .sort((left, right) => {
+      if (left.isCurrentlyReading !== right.isCurrentlyReading) {
+        return left.isCurrentlyReading ? -1 : 1
+      }
+
+      if (left.isCurrentlyReading && right.isCurrentlyReading) {
+        return new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime()
+      }
+
+      return left.displayName.localeCompare(right.displayName)
+    })
 }
 
 export async function fetchReadingActivity(limit = 20) {
@@ -445,7 +512,6 @@ export async function saveCurrentlyReadingItem({ workId, reading }) {
       .from(tables.currentlyReadingItems)
       .delete()
       .eq('user_id', user.id)
-      .eq('work_id', workId)
 
     if (error) {
       throw error
@@ -455,17 +521,21 @@ export async function saveCurrentlyReadingItem({ workId, reading }) {
   }
 
   const now = new Date().toISOString()
-  const { error } = await supabase.from(tables.currentlyReadingItems).upsert(
-    {
-      user_id: user.id,
-      work_id: workId,
-      started_at: now,
-      updated_at: now,
-    },
-    {
-      onConflict: 'user_id,work_id',
-    },
-  )
+  const { error: deleteError } = await supabase
+    .from(tables.currentlyReadingItems)
+    .delete()
+    .eq('user_id', user.id)
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  const { error } = await supabase.from(tables.currentlyReadingItems).insert({
+    user_id: user.id,
+    work_id: workId,
+    started_at: now,
+    updated_at: now,
+  })
 
   if (error) {
     throw error
