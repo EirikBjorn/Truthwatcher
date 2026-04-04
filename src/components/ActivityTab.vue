@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from 'vue'
+
 defineProps({
   isSignedIn: {
     type: Boolean,
@@ -9,6 +11,10 @@ defineProps({
     required: true,
   },
   activityItems: {
+    type: Array,
+    required: true,
+  },
+  currentReadingItems: {
     type: Array,
     required: true,
   },
@@ -23,6 +29,7 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle-activity-notifications'])
+const activeTab = ref('activity')
 
 function getActivityVerb(type) {
   return type === 'finished' ? 'just finished' : 'is reading'
@@ -41,6 +48,24 @@ function formatOccurredAt(type, value) {
   }
 
   return `${type === 'finished' ? 'Finished' : 'Started'} ${date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })}`
+}
+
+function formatStartedAt(value) {
+  const date = new Date(value)
+  const today = new Date()
+  const isSameDay =
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+
+  if (isSameDay) {
+    return 'Started today'
+  }
+
+  return `Started ${date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   })}`
@@ -100,11 +125,30 @@ function handleToggle(event) {
       </label>
     </section>
 
-    <div v-if="isSignedIn && !activityItems.length" class="empty-state">
+    <div v-if="isSignedIn" class="tab-row" role="tablist" aria-label="Activity views">
+      <button
+        class="tab-button"
+        :class="{ active: activeTab === 'activity' }"
+        type="button"
+        @click="activeTab = 'activity'"
+      >
+        Activity
+      </button>
+      <button
+        class="tab-button"
+        :class="{ active: activeTab === 'current' }"
+        type="button"
+        @click="activeTab = 'current'"
+      >
+        Currently Reading
+      </button>
+    </div>
+
+    <div v-if="isSignedIn && activeTab === 'activity' && !activityItems.length" class="empty-state">
       <p class="auth-copy">No reading activity yet. New starts and finishes will show up here.</p>
     </div>
 
-    <div v-else-if="isSignedIn" class="activity-list">
+    <div v-else-if="isSignedIn && activeTab === 'activity'" class="activity-list">
       <article v-for="item in activityItems" :key="item.id" class="activity-card">
         <div class="activity-avatar-wrap">
           <img
@@ -124,6 +168,61 @@ function handleToggle(event) {
           <h3>{{ item.bookTitle }}</h3>
           <p class="activity-meta">Publication #{{ item.publicationOrder }}</p>
           <p class="activity-time">{{ formatOccurredAt(item.type, item.occurredAt) }}</p>
+        </div>
+      </article>
+    </div>
+
+    <div v-else-if="isSignedIn" class="current-reading-grid">
+      <article
+        v-for="item in currentReadingItems"
+        :key="item.id"
+        class="current-reading-card"
+        :class="[{ idle: !item.isCurrentlyReading }, item.seriesSlug && `series-${item.seriesSlug}`]"
+      >
+        <div class="current-reading-card-top">
+          <div class="current-reading-profile">
+            <img
+              v-if="item.avatarUrl"
+              class="current-reading-avatar"
+              :src="item.avatarUrl"
+              :alt="`${item.displayName} avatar`"
+              referrerpolicy="no-referrer"
+            />
+            <div v-else class="current-reading-avatar fallback-avatar" aria-hidden="true">
+              {{ item.firstName.charAt(0).toUpperCase() }}
+            </div>
+
+            <div class="current-reading-profile-copy">
+              <h3>{{ item.displayName }}</h3>
+              <p>{{ item.isCurrentlyReading ? 'Currently reading' : 'Not reading right now' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="item.isCurrentlyReading" class="current-reading-book">
+          <p class="current-reading-kicker">Current book</p>
+          <h4>{{ item.bookTitle }}</h4>
+
+          <div class="current-reading-chip-row">
+            <span class="current-reading-series-chip">
+              <span class="current-reading-series-icon">{{ item.seriesShortLabel }}</span>
+              <span>{{ item.seriesLabel }}</span>
+            </span>
+            <span class="current-reading-chip">{{ item.bookType }}</span>
+            <span class="current-reading-chip">{{ item.planet }}</span>
+            <span class="current-reading-chip">Publication #{{ item.publicationOrder }}</span>
+          </div>
+
+          <p class="current-reading-time">
+            {{ formatStartedAt(item.startedAt) }} · {{ item.durationLabel }}
+          </p>
+        </div>
+
+        <div v-else class="current-reading-idle-state">
+          <span class="current-reading-idle-dot" aria-hidden="true"></span>
+          <p class="current-reading-idle-copy">
+            No book is marked as currently reading for this reader.
+          </p>
         </div>
       </article>
     </div>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+  fetchCurrentReadingFeed,
   fetchCurrentProfile,
   fetchLatestProgress,
   fetchProjectSubscriptions,
@@ -26,13 +27,13 @@ import { signInWithGoogle, signOut, supabase } from './lib/supabase'
 const progressItems = ref([])
 const readingList = ref([])
 const activityItems = ref([])
+const currentReadingItems = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 const authLoading = ref(true)
 const authBusy = ref(false)
 const currentUser = ref(null)
 const checklistTabStorageKey = `${storageKeyPrefix}.checklistTab`
-const appTabStorageKey = `${storageKeyPrefix}.appTab`
 const notificationPermission = ref(
   typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
 )
@@ -128,6 +129,7 @@ onMounted(async () => {
     }
     void loadReadingList(currentUser.value)
     void loadActivityItems(currentUser.value)
+    void loadCurrentReadingItems(currentUser.value)
     void loadProjectSubscriptionMap(currentUser.value)
     void loadActivityNotificationPreference(currentUser.value)
   })
@@ -136,14 +138,9 @@ onMounted(async () => {
 
   try {
     const savedChecklistTab = readSavedChecklistTab()
-    const savedAppTab = readSavedAppTab()
 
     if (savedChecklistTab) {
       activeChecklistTab.value = savedChecklistTab
-    }
-
-    if (savedAppTab) {
-      activeAppTab.value = savedAppTab
     }
 
     await hydrateAuthState()
@@ -151,6 +148,7 @@ onMounted(async () => {
       loadProgress(),
       loadReadingList(),
       loadActivityItems(),
+      loadCurrentReadingItems(),
       hydratePushState(),
       loadProjectSubscriptionMap(),
       loadActivityNotificationPreference(),
@@ -199,6 +197,15 @@ async function loadActivityItems(user = currentUser.value) {
   }
 
   activityItems.value = await fetchReadingActivity(20)
+}
+
+async function loadCurrentReadingItems(user = currentUser.value) {
+  if (!user) {
+    currentReadingItems.value = []
+    return
+  }
+
+  currentReadingItems.value = await fetchCurrentReadingFeed()
 }
 
 async function loadProjectSubscriptionMap(user = currentUser.value) {
@@ -392,6 +399,7 @@ async function toggleBook(id) {
   }
   await loadReadingList(currentUser.value)
   await loadActivityItems(currentUser.value)
+  await loadCurrentReadingItems(currentUser.value)
 }
 
 async function toggleCurrentReading(id) {
@@ -408,23 +416,13 @@ async function toggleCurrentReading(id) {
   })
   await loadReadingList(currentUser.value)
   await loadActivityItems(currentUser.value)
+  await loadCurrentReadingItems(currentUser.value)
 }
 
 function readSavedChecklistTab() {
   try {
     const savedValue = window.localStorage.getItem(checklistTabStorageKey)
     const validTabIds = new Set(CHECKLIST_TABS.map((tab) => tab.id))
-
-    return validTabIds.has(savedValue) ? savedValue : null
-  } catch {
-    return null
-  }
-}
-
-function readSavedAppTab() {
-  try {
-    const savedValue = window.localStorage.getItem(appTabStorageKey)
-    const validTabIds = new Set(appTabs.map((tab) => tab.id))
 
     return validTabIds.has(savedValue) ? savedValue : null
   } catch {
@@ -441,7 +439,7 @@ function formatChecklistMeta(book) {
     return `${book.type} · ${book.durationLabel} · ${book.planet}`
   }
 
-  return `${book.type} · ${book.planet}`
+  return `${book.type} · ${book.releaseDateLabel} · ${book.planet}`
 }
 
 function urlBase64ToUint8Array(value) {
@@ -455,14 +453,6 @@ function urlBase64ToUint8Array(value) {
 watch(activeChecklistTab, (value) => {
   try {
     window.localStorage.setItem(checklistTabStorageKey, value)
-  } catch {
-    // Ignore storage failures and keep the in-memory selection.
-  }
-})
-
-watch(activeAppTab, (value) => {
-  try {
-    window.localStorage.setItem(appTabStorageKey, value)
   } catch {
     // Ignore storage failures and keep the in-memory selection.
   }
@@ -506,6 +496,7 @@ watch(activeAppTab, (value) => {
       v-else-if="activeAppTab === 'activity'"
       :is-signed-in="isSignedIn"
       :activity-items="activityItems"
+      :current-reading-items="currentReadingItems"
       :activity-notifications-enabled="activityNotificationsEnabled"
       :notification-supported="notificationSupported"
       :notification-permission="notificationPermission"

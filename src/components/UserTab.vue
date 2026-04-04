@@ -110,6 +110,24 @@ function handleEnableNotifications() {
                 <strong>{{ cosmereProgress.completedBooks }}/{{ cosmereProgress.totalBooks }}</strong>
               </div>
               <div class="progress-stat">
+                <span class="progress-stat-label">Worlds visited</span>
+                <strong>{{ cosmereProgress.completedPlanets }}/{{ cosmereProgress.totalPlanets }}</strong>
+              </div>
+              <div class="progress-stat">
+                <span class="progress-stat-label">Novels read</span>
+                <strong>{{ cosmereProgress.completedNovels }}/{{ cosmereProgress.totalNovels }}</strong>
+              </div>
+              <div class="progress-stat">
+                <span class="progress-stat-label">Novellas read</span>
+                <strong>{{ cosmereProgress.completedNovellas }}/{{ cosmereProgress.totalNovellas }}</strong>
+              </div>
+              <div class="progress-stat">
+                <span class="progress-stat-label">Short stories read</span>
+                <strong>
+                  {{ cosmereProgress.completedShortStories }}/{{ cosmereProgress.totalShortStories }}
+                </strong>
+              </div>
+              <div class="progress-stat">
                 <span class="progress-stat-label">Hours left</span>
                 <strong>{{ formatHours(cosmereProgress.remainingHours) }}</strong>
               </div>
