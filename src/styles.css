@@ -369,15 +369,15 @@ input {
 }
 
 .checklist-item.series-mistborn {
-  --series-accent: rgba(131, 88, 48, 0.48);
-  --series-chip-background: rgba(246, 236, 224, 0.96);
-  --series-chip-color: #7a4f2c;
+  --series-accent: rgba(59, 37, 95, 0.58);
+  --series-chip-background: rgba(229, 223, 242, 0.96);
+  --series-chip-color: #382057;
 }
 
 .checklist-item.series-stormlight {
-  --series-accent: rgba(75, 116, 138, 0.48);
-  --series-chip-background: rgba(229, 239, 243, 0.96);
-  --series-chip-color: #31586d;
+  --series-accent: rgba(15, 72, 163, 0.58);
+  --series-chip-background: rgba(223, 234, 251, 0.96);
+  --series-chip-color: #0f48a3;
 }
 
 .checklist-item.series-elantris {
@@ -423,9 +423,9 @@ input {
 }
 
 .checklist-item.theme-yumi {
-  --series-accent: rgba(122, 92, 160, 0.48);
-  --series-chip-background: rgba(237, 232, 245, 0.96);
-  --series-chip-color: #6c4d98;
+  --series-accent: rgba(198, 92, 141, 0.52);
+  --series-chip-background: rgba(248, 229, 238, 0.96);
+  --series-chip-color: #ab4774;
 }
 
 .checklist-item.theme-sunlit {
@@ -795,15 +795,15 @@ input {
 }
 
 .current-reading-card.series-mistborn {
-  --series-accent: rgba(131, 88, 48, 0.3);
-  --series-chip-background: rgba(246, 236, 224, 0.96);
-  --series-chip-color: #7a4f2c;
+  --series-accent: rgba(59, 37, 95, 0.4);
+  --series-chip-background: rgba(229, 223, 242, 0.96);
+  --series-chip-color: #382057;
 }
 
 .current-reading-card.series-stormlight {
-  --series-accent: rgba(75, 116, 138, 0.3);
-  --series-chip-background: rgba(229, 239, 243, 0.96);
-  --series-chip-color: #31586d;
+  --series-accent: rgba(15, 72, 163, 0.4);
+  --series-chip-background: rgba(223, 234, 251, 0.96);
+  --series-chip-color: #0f48a3;
 }
 
 .current-reading-card.series-elantris {
@@ -849,9 +849,9 @@ input {
 }
 
 .current-reading-card.theme-yumi {
-  --series-accent: rgba(122, 92, 160, 0.3);
-  --series-chip-background: rgba(237, 232, 245, 0.96);
-  --series-chip-color: #6c4d98;
+  --series-accent: rgba(198, 92, 141, 0.34);
+  --series-chip-background: rgba(248, 229, 238, 0.96);
+  --series-chip-color: #ab4774;
 }
 
 .current-reading-card.theme-sunlit {
