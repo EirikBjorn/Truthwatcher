@@ -49,8 +49,9 @@ const appTabs = [
   { id: 'tracker', label: 'Tracker' },
 ]
 
+const releasedReadingList = computed(() => readingList.value.filter((item) => item.isReleased !== false))
 const completedBooks = computed(() =>
-  readingList.value.filter((item) => item.completed).length,
+  releasedReadingList.value.filter((item) => item.completed).length,
 )
 const cosmereProgress = computed(() => calculateCosmereProgress(readingList.value))
 const isSignedIn = computed(() => Boolean(currentUser.value))
@@ -443,6 +444,10 @@ function readSavedChecklistTab() {
 }
 
 function formatChecklistMeta(book) {
+  if (!book.isReleased) {
+    return `${book.type} · ${book.releaseDateLabel} · ${book.planet} · Publication #${book.publicationOrder}`
+  }
+
   if (activeChecklistTab.value === 'planet') {
     return `${book.type} · Publication #${book.publicationOrder}`
   }
@@ -495,7 +500,7 @@ watch(activeChecklistTab, (value) => {
     <ReadingListTab
       v-else-if="activeAppTab === 'list'"
       :completed-books="completedBooks"
-      :reading-list-length="readingList.length"
+      :reading-list-length="releasedReadingList.length"
       :is-signed-in="isSignedIn"
       :active-checklist-tab="activeChecklistTab"
       :checklist-sections="checklistSections"

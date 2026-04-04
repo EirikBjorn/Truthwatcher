@@ -314,6 +314,7 @@ export async function fetchCurrentReadingFeed() {
         seriesSlug: primarySeries?.slug ?? '',
         seriesLabel: primarySeries?.label ?? '',
         seriesShortLabel: primarySeries?.shortLabel ?? '',
+        themeSlug: primarySeries?.themeSlug ?? '',
         startedAt: primaryRow?.started_at ?? null,
         latestStartedAt,
         additionalListeningBookTitle: additionalListeningWork?.title ?? '',

@@ -219,7 +219,11 @@ function handleToggle(event) {
         v-for="item in currentReadingItems"
         :key="item.id"
         class="current-reading-card"
-        :class="[{ idle: !item.hasCurrentActivity }, item.seriesSlug && `series-${item.seriesSlug}`]"
+        :class="[
+          { idle: !item.hasCurrentActivity },
+          item.seriesSlug && `series-${item.seriesSlug}`,
+          item.themeSlug && `theme-${item.themeSlug}`,
+        ]"
       >
         <div class="current-reading-card-top">
           <div class="current-reading-profile">
