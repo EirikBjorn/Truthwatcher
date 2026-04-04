@@ -390,13 +390,6 @@ async function toggleBook(id) {
     completed: !existingItem.completed,
     user: currentUser.value,
   })
-  if (!existingItem.completed && existingItem.isCurrentlyReading) {
-    await setReadingItemCurrentState({
-      id,
-      reading: false,
-      user: currentUser.value,
-    })
-  }
   await loadReadingList(currentUser.value)
   await loadActivityItems(currentUser.value)
   await loadCurrentReadingItems(currentUser.value)
@@ -405,7 +398,7 @@ async function toggleBook(id) {
 async function toggleCurrentReading(id) {
   const existingItem = readingList.value.find((item) => item.id === id)
 
-  if (!existingItem || !currentUser.value || existingItem.completed) {
+  if (!existingItem || !currentUser.value) {
     return
   }
 
@@ -413,6 +406,25 @@ async function toggleCurrentReading(id) {
     id,
     reading: !existingItem.isCurrentlyReading,
     user: currentUser.value,
+    engagementType: 'reading',
+  })
+  await loadReadingList(currentUser.value)
+  await loadActivityItems(currentUser.value)
+  await loadCurrentReadingItems(currentUser.value)
+}
+
+async function toggleCurrentListening(id) {
+  const existingItem = readingList.value.find((item) => item.id === id)
+
+  if (!existingItem || !currentUser.value) {
+    return
+  }
+
+  await setReadingItemCurrentState({
+    id,
+    reading: !existingItem.isCurrentlyListening,
+    user: currentUser.value,
+    engagementType: 'listening',
   })
   await loadReadingList(currentUser.value)
   await loadActivityItems(currentUser.value)
@@ -490,6 +502,7 @@ watch(activeChecklistTab, (value) => {
       @update:active-checklist-tab="activeChecklistTab = $event"
       @toggle-book="toggleBook"
       @toggle-current-reading="toggleCurrentReading"
+      @toggle-current-listening="toggleCurrentListening"
     />
 
     <ActivityTab

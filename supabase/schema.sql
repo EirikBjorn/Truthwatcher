@@ -102,10 +102,34 @@ create table if not exists public.currently_reading_items (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
   work_id text not null,
+  engagement_type text not null default 'reading',
   started_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (user_id)
+  unique (user_id, engagement_type)
 );
+
+alter table public.currently_reading_items
+add column if not exists engagement_type text;
+
+update public.currently_reading_items
+set engagement_type = 'reading'
+where engagement_type is null;
+
+alter table public.currently_reading_items
+alter column engagement_type set default 'reading';
+
+alter table public.currently_reading_items
+alter column engagement_type set not null;
+
+alter table public.currently_reading_items
+drop constraint if exists currently_reading_items_engagement_type_check;
+
+alter table public.currently_reading_items
+add constraint currently_reading_items_engagement_type_check
+check (engagement_type in ('reading', 'listening'));
+
+alter table public.currently_reading_items
+drop constraint if exists currently_reading_items_user_id_key;
 
 alter table public.currently_reading_items
 drop constraint if exists currently_reading_items_user_id_work_id_key;
@@ -114,7 +138,7 @@ with ranked_currently_reading_items as (
   select
     id,
     row_number() over (
-      partition by user_id
+      partition by user_id, engagement_type
       order by started_at desc, updated_at desc, id desc
     ) as duplicate_rank
   from public.currently_reading_items
@@ -128,18 +152,30 @@ where
 create index if not exists currently_reading_items_started_at_idx
 on public.currently_reading_items (started_at desc);
 
-create unique index if not exists currently_reading_items_user_id_idx
+drop index if exists currently_reading_items_user_id_idx;
+
+create index if not exists currently_reading_items_user_id_idx
 on public.currently_reading_items (user_id);
+
+create unique index if not exists currently_reading_items_user_id_engagement_type_idx
+on public.currently_reading_items (user_id, engagement_type);
 
 create table if not exists public.activity_events (
   id bigint generated always as identity primary key,
   actor_user_id uuid not null references auth.users (id) on delete cascade,
   work_id text not null,
-  activity_type text not null check (activity_type in ('reading', 'finished')),
+  activity_type text not null check (activity_type in ('reading', 'listening', 'finished')),
   occurred_at timestamptz not null default now(),
   processed_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.activity_events
+drop constraint if exists activity_events_activity_type_check;
+
+alter table public.activity_events
+add constraint activity_events_activity_type_check
+check (activity_type in ('reading', 'listening', 'finished'));
 
 create index if not exists activity_events_processed_at_idx
 on public.activity_events (processed_at, occurred_at desc);
@@ -249,7 +285,7 @@ set search_path = public
 as $$
 begin
   insert into public.activity_events (actor_user_id, work_id, activity_type, occurred_at)
-  values (new.user_id, new.work_id, 'reading', coalesce(new.started_at, now()));
+  values (new.user_id, new.work_id, new.engagement_type, coalesce(new.started_at, now()));
 
   return new;
 end;
@@ -383,10 +419,34 @@ create table if not exists public.dev_currently_reading_items (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
   work_id text not null,
+  engagement_type text not null default 'reading',
   started_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (user_id)
+  unique (user_id, engagement_type)
 );
+
+alter table public.dev_currently_reading_items
+add column if not exists engagement_type text;
+
+update public.dev_currently_reading_items
+set engagement_type = 'reading'
+where engagement_type is null;
+
+alter table public.dev_currently_reading_items
+alter column engagement_type set default 'reading';
+
+alter table public.dev_currently_reading_items
+alter column engagement_type set not null;
+
+alter table public.dev_currently_reading_items
+drop constraint if exists dev_currently_reading_items_engagement_type_check;
+
+alter table public.dev_currently_reading_items
+add constraint dev_currently_reading_items_engagement_type_check
+check (engagement_type in ('reading', 'listening'));
+
+alter table public.dev_currently_reading_items
+drop constraint if exists dev_currently_reading_items_user_id_key;
 
 alter table public.dev_currently_reading_items
 drop constraint if exists dev_currently_reading_items_user_id_work_id_key;
@@ -395,7 +455,7 @@ with ranked_dev_currently_reading_items as (
   select
     id,
     row_number() over (
-      partition by user_id
+      partition by user_id, engagement_type
       order by started_at desc, updated_at desc, id desc
     ) as duplicate_rank
   from public.dev_currently_reading_items
@@ -409,18 +469,30 @@ where
 create index if not exists dev_currently_reading_items_started_at_idx
 on public.dev_currently_reading_items (started_at desc);
 
-create unique index if not exists dev_currently_reading_items_user_id_idx
+drop index if exists dev_currently_reading_items_user_id_idx;
+
+create index if not exists dev_currently_reading_items_user_id_idx
 on public.dev_currently_reading_items (user_id);
+
+create unique index if not exists dev_currently_reading_items_user_id_engagement_type_idx
+on public.dev_currently_reading_items (user_id, engagement_type);
 
 create table if not exists public.dev_activity_events (
   id bigint generated always as identity primary key,
   actor_user_id uuid not null references auth.users (id) on delete cascade,
   work_id text not null,
-  activity_type text not null check (activity_type in ('reading', 'finished')),
+  activity_type text not null check (activity_type in ('reading', 'listening', 'finished')),
   occurred_at timestamptz not null default now(),
   processed_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.dev_activity_events
+drop constraint if exists dev_activity_events_activity_type_check;
+
+alter table public.dev_activity_events
+add constraint dev_activity_events_activity_type_check
+check (activity_type in ('reading', 'listening', 'finished'));
 
 create index if not exists dev_activity_events_processed_at_idx
 on public.dev_activity_events (processed_at, occurred_at desc);
@@ -530,7 +602,7 @@ set search_path = public
 as $$
 begin
   insert into public.dev_activity_events (actor_user_id, work_id, activity_type, occurred_at)
-  values (new.user_id, new.work_id, 'reading', coalesce(new.started_at, now()));
+  values (new.user_id, new.work_id, new.engagement_type, coalesce(new.started_at, now()));
 
   return new;
 end;

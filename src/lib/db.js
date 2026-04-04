@@ -20,31 +20,37 @@ function createReaderRecord(reader) {
 function buildReadingList(
   completedWorkIds = [],
   readersByWork = {},
-  currentReadingByWork = {},
+  currentStateByWork = {},
   currentUserId = null,
 ) {
   const completedSet = new Set(completedWorkIds)
 
-  return COSMERE_WORKS.map((work) => ({
-    ...work,
-    ...getWorkSeriesMeta(work),
-    completed: completedSet.has(work.id),
-    isCurrentlyReading: Boolean(currentReadingByWork[work.id]),
-    startedReadingAt: currentReadingByWork[work.id] ?? null,
-    readers: [...(readersByWork[work.id] ?? [])]
-      .sort((left, right) => {
-        if (left.id === currentUserId && right.id !== currentUserId) {
-          return -1
-        }
+  return COSMERE_WORKS.map((work) => {
+    const currentState = currentStateByWork[work.id] ?? {}
 
-        if (right.id === currentUserId && left.id !== currentUserId) {
-          return 1
-        }
+    return {
+      ...work,
+      ...getWorkSeriesMeta(work),
+      completed: completedSet.has(work.id),
+      isCurrentlyReading: Boolean(currentState.reading),
+      startedReadingAt: currentState.reading ?? null,
+      isCurrentlyListening: Boolean(currentState.listening),
+      startedListeningAt: currentState.listening ?? null,
+      readers: [...(readersByWork[work.id] ?? [])]
+        .sort((left, right) => {
+          if (left.id === currentUserId && right.id !== currentUserId) {
+            return -1
+          }
 
-        return left.displayName.localeCompare(right.displayName)
-      })
-      .map(createReaderRecord),
-  }))
+          if (right.id === currentUserId && left.id !== currentUserId) {
+            return 1
+          }
+
+          return left.displayName.localeCompare(right.displayName)
+        })
+        .map(createReaderRecord),
+    }
+  })
 }
 
 export async function getReadingList(user) {
@@ -58,11 +64,16 @@ export async function getReadingList(user) {
     fetchCurrentlyReadingItems(user.id),
   ])
 
-  const currentReadingByWork = Object.fromEntries(
-    currentReadingItems.map((item) => [item.work_id, item.started_at]),
-  )
+  const currentStateByWork = currentReadingItems.reduce((groups, item) => {
+    if (!groups[item.work_id]) {
+      groups[item.work_id] = {}
+    }
 
-  return buildReadingList(completedWorkIds, readersByWork, currentReadingByWork, user.id)
+    groups[item.work_id][item.engagement_type] = item.started_at
+    return groups
+  }, {})
+
+  return buildReadingList(completedWorkIds, readersByWork, currentStateByWork, user.id)
 }
 
 export async function setReadingItemCompleted({ id, completed, user }) {
@@ -88,7 +99,12 @@ export async function setReadingItemCompleted({ id, completed, user }) {
   }
 }
 
-export async function setReadingItemCurrentState({ id, reading, user }) {
+export async function setReadingItemCurrentState({
+  id,
+  reading,
+  user,
+  engagementType = 'reading',
+}) {
   if (!user) {
     throw new Error('You must be signed in to save your current reading state.')
   }
@@ -103,11 +119,17 @@ export async function setReadingItemCurrentState({ id, reading, user }) {
   await saveCurrentlyReadingItem({
     workId: id,
     reading,
+    engagementType,
   })
+
+  const now = reading ? new Date().toISOString() : null
+  const isReadingMode = engagementType === 'reading'
 
   return {
     ...item,
-    isCurrentlyReading: reading,
-    startedReadingAt: reading ? new Date().toISOString() : null,
+    isCurrentlyReading: isReadingMode ? reading : false,
+    startedReadingAt: isReadingMode ? now : null,
+    isCurrentlyListening: !isReadingMode ? reading : false,
+    startedListeningAt: !isReadingMode ? now : null,
   }
 }

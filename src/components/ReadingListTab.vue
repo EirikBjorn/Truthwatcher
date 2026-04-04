@@ -25,7 +25,12 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:active-checklist-tab', 'toggle-book', 'toggle-current-reading'])
+const emit = defineEmits([
+  'update:active-checklist-tab',
+  'toggle-book',
+  'toggle-current-reading',
+  'toggle-current-listening',
+])
 
 function selectChecklistTab(tabId) {
   emit('update:active-checklist-tab', tabId)
@@ -37,6 +42,10 @@ function handleToggleBook(bookId) {
 
 function handleToggleCurrentReading(bookId) {
   emit('toggle-current-reading', bookId)
+}
+
+function handleToggleCurrentListening(bookId) {
+  emit('toggle-current-listening', bookId)
 }
 </script>
 
@@ -79,6 +88,7 @@ function handleToggleCurrentReading(bookId) {
             :disabled="!isSignedIn"
             @toggle="handleToggleBook"
             @toggle-current-reading="handleToggleCurrentReading"
+            @toggle-current-listening="handleToggleCurrentListening"
           />
         </div>
       </section>
