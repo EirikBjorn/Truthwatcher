@@ -390,7 +390,7 @@ export function getWorkDurationHours(work) {
 }
 
 export function isWorkReleased(work) {
-  return work?.isReleased !== false
+  return Boolean(work) && work.isReleased !== false
 }
 
 export function calculateCosmereProgress(readingList = []) {

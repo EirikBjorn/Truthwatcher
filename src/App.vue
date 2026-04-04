@@ -50,6 +50,7 @@ const appTabs = [
 ]
 
 const releasedReadingList = computed(() => readingList.value.filter((item) => item.isReleased !== false))
+const unreleasedBooks = computed(() => readingList.value.filter((item) => item.isReleased === false).length)
 const completedBooks = computed(() =>
   releasedReadingList.value.filter((item) => item.completed).length,
 )
@@ -501,6 +502,7 @@ watch(activeChecklistTab, (value) => {
       v-else-if="activeAppTab === 'list'"
       :completed-books="completedBooks"
       :reading-list-length="releasedReadingList.length"
+      :unreleased-books="unreleasedBooks"
       :is-signed-in="isSignedIn"
       :active-checklist-tab="activeChecklistTab"
       :checklist-sections="checklistSections"
