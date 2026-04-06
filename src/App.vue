@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   fetchCurrentReadingFeed,
   fetchCurrentProfile,
+  fetchProfileSnapshot,
   fetchLatestProgress,
   fetchProjectSubscriptions,
   fetchReadingActivity,
@@ -12,7 +13,7 @@ import {
   syncCurrentProfile,
 } from './lib/api'
 import { storageKeyPrefix } from './lib/app-env'
-import { CHECKLIST_TABS, PLANET_ORDER, calculateCosmereProgress } from './lib/books'
+import { CHECKLIST_TABS, COSMERE_WORKS, PLANET_ORDER, calculateCosmereProgress } from './lib/books'
 import ActivityTab from './components/ActivityTab.vue'
 import ReadingListTab from './components/ReadingListTab.vue'
 import {
@@ -22,6 +23,7 @@ import {
 } from './lib/db'
 import TrackerTab from './components/TrackerTab.vue'
 import UserTab from './components/UserTab.vue'
+import UserProfileView from './components/UserProfileView.vue'
 import { signInWithGoogle, signOut, supabase } from './lib/supabase'
 
 const progressItems = ref([])
@@ -42,6 +44,10 @@ const currentSubscription = ref(null)
 const subscriptionMap = ref({})
 const activeChecklistTab = ref('eirik')
 const activeAppTab = ref('home')
+const activeActivityTab = ref('current')
+const previousAppTab = ref('activity')
+const profileLoading = ref(false)
+const selectedProfileSnapshot = ref(null)
 const appTabs = [
   { id: 'home', label: 'Home' },
   { id: 'list', label: 'List' },
@@ -73,6 +79,19 @@ const currentUserAvatar = computed(() => {
   return metadata.avatar_url || metadata.picture || ''
 })
 const currentUserInitial = computed(() => currentUserName.value.trim().charAt(0).toUpperCase() || 'U')
+const activeNavTab = computed(() =>
+  activeAppTab.value === 'profile' ? previousAppTab.value : activeAppTab.value,
+)
+const selectedProfileProgress = computed(() => {
+  const completedWorkIds = new Set(selectedProfileSnapshot.value?.completedWorkIds ?? [])
+
+  return calculateCosmereProgress(
+    COSMERE_WORKS.map((work) => ({
+      ...work,
+      completed: completedWorkIds.has(work.id),
+    })),
+  )
+})
 
 const checklistSections = computed(() => {
   if (activeChecklistTab.value === 'planet') {
@@ -433,6 +452,34 @@ async function toggleCurrentListening(id) {
   await loadCurrentReadingItems(currentUser.value)
 }
 
+async function openProfile(userId) {
+  if (!userId) {
+    return
+  }
+
+  try {
+    errorMessage.value = ''
+    profileLoading.value = true
+    previousAppTab.value = activeAppTab.value === 'profile' ? previousAppTab.value : activeAppTab.value
+    activeAppTab.value = 'profile'
+    selectedProfileSnapshot.value = null
+    selectedProfileSnapshot.value = await fetchProfileSnapshot(userId)
+
+    if (!selectedProfileSnapshot.value) {
+      throw new Error('That reader profile could not be found.')
+    }
+  } catch (error) {
+    errorMessage.value = error.message
+    activeAppTab.value = previousAppTab.value
+  } finally {
+    profileLoading.value = false
+  }
+}
+
+function closeProfile() {
+  activeAppTab.value = previousAppTab.value
+}
+
 function readSavedChecklistTab() {
   try {
     const savedValue = window.localStorage.getItem(checklistTabStorageKey)
@@ -520,7 +567,20 @@ watch(activeChecklistTab, (value) => {
       :activity-notifications-enabled="activityNotificationsEnabled"
       :notification-supported="notificationSupported"
       :notification-permission="notificationPermission"
+      :active-tab="activeActivityTab"
       @toggle-activity-notifications="toggleActivityNotifications"
+      @select-profile="openProfile"
+      @update:active-tab="activeActivityTab = $event"
+    />
+
+    <UserProfileView
+      v-else-if="activeAppTab === 'profile'"
+      :loading="profileLoading"
+      :profile="selectedProfileSnapshot?.profile ?? null"
+      :cosmere-progress="selectedProfileProgress"
+      :current-reading="selectedProfileSnapshot?.currentReading ?? null"
+      :current-listening="selectedProfileSnapshot?.currentListening ?? null"
+      @back="closeProfile"
     />
 
     <TrackerTab
@@ -537,7 +597,7 @@ watch(activeChecklistTab, (value) => {
         v-for="tab in appTabs"
         :key="tab.id"
         class="bottom-nav-button"
-        :class="{ active: activeAppTab === tab.id }"
+        :class="{ active: activeNavTab === tab.id }"
         type="button"
         @click="activeAppTab = tab.id"
       >
