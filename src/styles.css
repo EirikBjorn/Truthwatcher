@@ -800,7 +800,7 @@ input {
   display: grid;
   gap: 1rem;
   min-width: 0;
-  padding: 1.1rem 1.1rem 1.1rem;
+  padding: 1.1rem;
   border-radius: 1.15rem;
   background:
     radial-gradient(circle at top left, var(--series-accent), transparent 12rem),

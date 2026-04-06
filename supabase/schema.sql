@@ -294,6 +294,8 @@ as $$
   group by reading_checklist_items.user_id;
 $$;
 
+revoke execute on function public.get_completed_reading_counts() from public;
+revoke execute on function public.get_completed_reading_counts() from anon;
 grant execute on function public.get_completed_reading_counts() to authenticated;
 
 create or replace function public.log_currently_reading_activity_event()
@@ -630,6 +632,8 @@ as $$
   group by dev_reading_checklist_items.user_id;
 $$;
 
+revoke execute on function public.get_dev_completed_reading_counts() from public;
+revoke execute on function public.get_dev_completed_reading_counts() from anon;
 grant execute on function public.get_dev_completed_reading_counts() to authenticated;
 
 create or replace function public.log_dev_currently_reading_activity_event()
