@@ -5,6 +5,12 @@ import { COSMERE_WORKS, getWorkById, getWorkSeriesMeta, isWorkReleased } from '.
 const CURRENT_ENGAGEMENT_TYPES = new Set(['reading', 'listening'])
 const TOTAL_RELEASED_BOOKS = COSMERE_WORKS.filter(isWorkReleased).length
 
+function getCompletedReadingCountsRpcName() {
+  return tables.readingChecklistItems.startsWith('dev_')
+    ? 'get_dev_completed_reading_counts'
+    : 'get_completed_reading_counts'
+}
+
 function getUserDisplayName(user) {
   const metadata = user?.user_metadata ?? {}
 
@@ -258,18 +264,17 @@ export async function fetchCurrentReadingFeed() {
     throw profilesError
   }
 
-  const { data: checklistRows, error: checklistError } = await supabase
-    .from(tables.readingChecklistItems)
-    .select('user_id')
-    .eq('completed', true)
+  const { data: completedCounts, error: completedCountsError } = await supabase.rpc(
+    getCompletedReadingCountsRpcName(),
+  )
 
-  if (checklistError) {
-    throw checklistError
+  if (completedCountsError) {
+    throw completedCountsError
   }
 
   const currentByUserId = new Map()
-  const completedCountByUserId = (checklistRows ?? []).reduce((groups, row) => {
-    groups.set(row.user_id, (groups.get(row.user_id) ?? 0) + 1)
+  const completedCountByUserId = (completedCounts ?? []).reduce((groups, row) => {
+    groups.set(row.user_id, Number(row.completed_count) || 0)
     return groups
   }, new Map())
 

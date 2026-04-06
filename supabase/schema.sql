@@ -277,6 +277,25 @@ to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+create or replace function public.get_completed_reading_counts()
+returns table (
+  user_id uuid,
+  completed_count bigint
+)
+language sql
+stable
+set search_path = public
+as $$
+  select
+    reading_checklist_items.user_id,
+    count(*)::bigint as completed_count
+  from public.reading_checklist_items as reading_checklist_items
+  where reading_checklist_items.completed = true
+  group by reading_checklist_items.user_id;
+$$;
+
+grant execute on function public.get_completed_reading_counts() to authenticated;
+
 create or replace function public.log_currently_reading_activity_event()
 returns trigger
 language plpgsql
@@ -593,6 +612,25 @@ for all
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+create or replace function public.get_dev_completed_reading_counts()
+returns table (
+  user_id uuid,
+  completed_count bigint
+)
+language sql
+stable
+set search_path = public
+as $$
+  select
+    dev_reading_checklist_items.user_id,
+    count(*)::bigint as completed_count
+  from public.dev_reading_checklist_items as dev_reading_checklist_items
+  where dev_reading_checklist_items.completed = true
+  group by dev_reading_checklist_items.user_id;
+$$;
+
+grant execute on function public.get_dev_completed_reading_counts() to authenticated;
 
 create or replace function public.log_dev_currently_reading_activity_event()
 returns trigger
