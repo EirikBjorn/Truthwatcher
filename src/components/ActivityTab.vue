@@ -257,6 +257,10 @@ function setActiveTab(value) {
         @keydown.enter="openProfile(item.userId)"
         @keydown.space.prevent="openProfile(item.userId)"
       >
+        <p v-if="item.hasCurrentActivity" class="current-reading-progress-pill">
+          {{ item.currentJourneyIndex }}/{{ item.totalBooks }}
+        </p>
+
         <div class="current-reading-card-top">
           <div class="current-reading-profile">
             <img
