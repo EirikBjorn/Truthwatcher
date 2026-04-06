@@ -1,7 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-
-defineProps({
+const props = defineProps({
   isSignedIn: {
     type: Boolean,
     required: true,
@@ -26,10 +24,17 @@ defineProps({
     type: String,
     required: true,
   },
+  activeTab: {
+    type: String,
+    required: true,
+  },
 })
 
-const emit = defineEmits(['toggle-activity-notifications'])
-const activeTab = ref('current')
+const emit = defineEmits([
+  'toggle-activity-notifications',
+  'select-profile',
+  'update:active-tab',
+])
 
 function getActivityVerb(type) {
   if (type === 'finished') {
@@ -114,6 +119,18 @@ function getCurrentKicker(item) {
 function handleToggle(event) {
   emit('toggle-activity-notifications', event.target.checked)
 }
+
+function openProfile(userId) {
+  if (!userId) {
+    return
+  }
+
+  emit('select-profile', userId)
+}
+
+function setActiveTab(value) {
+  emit('update:active-tab', value)
+}
 </script>
 
 <template>
@@ -168,30 +185,39 @@ function handleToggle(event) {
     <div v-if="isSignedIn" class="tab-row" role="tablist" aria-label="Activity views">
       <button
         class="tab-button"
-        :class="{ active: activeTab === 'current' }"
+        :class="{ active: props.activeTab === 'current' }"
         type="button"
-        @click="activeTab = 'current'"
+        @click="setActiveTab('current')"
       >
         Currently Reading
       </button>
       <button
         class="tab-button"
-        :class="{ active: activeTab === 'activity' }"
+        :class="{ active: props.activeTab === 'activity' }"
         type="button"
-        @click="activeTab = 'activity'"
+        @click="setActiveTab('activity')"
       >
         Activity
       </button>
     </div>
 
-    <div v-if="isSignedIn && activeTab === 'activity' && !activityItems.length" class="empty-state">
+    <div v-if="isSignedIn && props.activeTab === 'activity' && !activityItems.length" class="empty-state">
       <p class="auth-copy">
         No reading activity yet. New starts, listening updates, and finishes will show up here.
       </p>
     </div>
 
-    <div v-else-if="isSignedIn && activeTab === 'activity'" class="activity-list">
-      <article v-for="item in activityItems" :key="item.id" class="activity-card">
+    <div v-else-if="isSignedIn && props.activeTab === 'activity'" class="activity-list">
+      <article
+        v-for="item in activityItems"
+        :key="item.id"
+        class="activity-card activity-card-actionable"
+        role="button"
+        tabindex="0"
+        @click="openProfile(item.userId)"
+        @keydown.enter="openProfile(item.userId)"
+        @keydown.space.prevent="openProfile(item.userId)"
+      >
         <div class="activity-avatar-wrap">
           <img
             v-if="item.avatarUrl"
@@ -223,7 +249,13 @@ function handleToggle(event) {
           { idle: !item.hasCurrentActivity },
           item.seriesSlug && `series-${item.seriesSlug}`,
           item.themeSlug && `theme-${item.themeSlug}`,
+          'current-reading-card-actionable',
         ]"
+        role="button"
+        tabindex="0"
+        @click="openProfile(item.userId)"
+        @keydown.enter="openProfile(item.userId)"
+        @keydown.space.prevent="openProfile(item.userId)"
       >
         <div class="current-reading-card-top">
           <div class="current-reading-profile">

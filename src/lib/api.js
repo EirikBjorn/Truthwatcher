@@ -443,6 +443,54 @@ export async function fetchProfileById(userId) {
   }
 }
 
+export async function fetchProfileSnapshot(userId) {
+  if (!userId) {
+    return null
+  }
+
+  const [profile, completedWorkIds, currentItems] = await Promise.all([
+    fetchProfileById(userId),
+    fetchReadingChecklistItems(userId),
+    fetchCurrentlyReadingItems(userId),
+  ])
+
+  if (!profile) {
+    return null
+  }
+
+  const currentByMode = currentItems.reduce((groups, item) => {
+    if (!CURRENT_ENGAGEMENT_TYPES.has(item.engagement_type) || groups[item.engagement_type]) {
+      return groups
+    }
+
+    const work = getWorkById(item.work_id)
+
+    if (!work) {
+      return groups
+    }
+
+    groups[item.engagement_type] = {
+      mode: item.engagement_type,
+      startedAt: item.started_at,
+      workId: work.id,
+      title: work.title,
+      publicationOrder: work.publicationOrder,
+      type: work.type,
+      planet: work.planet,
+      durationLabel: work.durationLabel,
+      ...getWorkSeriesMeta(work),
+    }
+    return groups
+  }, {})
+
+  return {
+    profile,
+    completedWorkIds,
+    currentReading: currentByMode.reading ?? null,
+    currentListening: currentByMode.listening ?? null,
+  }
+}
+
 export async function syncCurrentProfile(user) {
   if (!user?.id) {
     throw new Error('A signed-in user is required before syncing a profile.')
