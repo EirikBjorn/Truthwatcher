@@ -1,8 +1,15 @@
 import { supabase } from './supabase'
 import { tables } from './tables'
-import { getWorkById, getWorkSeriesMeta } from './books'
+import { COSMERE_WORKS, getWorkById, getWorkSeriesMeta, isWorkReleased } from './books'
 
 const CURRENT_ENGAGEMENT_TYPES = new Set(['reading', 'listening'])
+const TOTAL_RELEASED_BOOKS = COSMERE_WORKS.filter(isWorkReleased).length
+
+function getCompletedReadingCountsRpcName() {
+  return tables.readingChecklistItems.startsWith('dev_')
+    ? 'get_dev_completed_reading_counts'
+    : 'get_completed_reading_counts'
+}
 
 function getUserDisplayName(user) {
   const metadata = user?.user_metadata ?? {}
@@ -257,7 +264,19 @@ export async function fetchCurrentReadingFeed() {
     throw profilesError
   }
 
+  const { data: completedCounts, error: completedCountsError } = await supabase.rpc(
+    getCompletedReadingCountsRpcName(),
+  )
+
+  if (completedCountsError) {
+    throw completedCountsError
+  }
+
   const currentByUserId = new Map()
+  const completedCountByUserId = (completedCounts ?? []).reduce((groups, row) => {
+    groups.set(row.user_id, Number(row.completed_count) || 0)
+    return groups
+  }, new Map())
 
   for (const row of currentRows ?? []) {
     if (!CURRENT_ENGAGEMENT_TYPES.has(row.engagement_type)) {
@@ -288,6 +307,10 @@ export async function fetchCurrentReadingFeed() {
         hasReading &&
         hasListening &&
         readingWork.id === listeningWork.id
+      const completedBooks = completedCountByUserId.get(profile.id) ?? 0
+      const currentJourneyIndex = hasReading || hasListening
+        ? Math.min(completedBooks + 1, TOTAL_RELEASED_BOOKS)
+        : completedBooks
       const additionalListeningWork =
         hasReading && hasListening && !hasSharedCurrentWork ? listeningWork : null
       const latestStartedAt = [readingRow?.started_at, listeningRow?.started_at]
@@ -300,6 +323,9 @@ export async function fetchCurrentReadingFeed() {
         firstName: profile.display_name.split(/\s+/)[0] || profile.display_name,
         displayName: profile.display_name,
         avatarUrl: profile.avatar_url,
+        completedBooks,
+        totalBooks: TOTAL_RELEASED_BOOKS,
+        currentJourneyIndex,
         hasCurrentActivity: hasReading || hasListening,
         isCurrentlyReading: hasReading,
         isCurrentlyListening: hasListening,

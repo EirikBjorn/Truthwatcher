@@ -796,6 +796,7 @@ input {
   --series-accent: rgba(89, 112, 103, 0.28);
   --series-chip-background: rgba(238, 243, 237, 0.92);
   --series-chip-color: #355f53;
+  position: relative;
   display: grid;
   gap: 1rem;
   min-width: 0;
@@ -960,6 +961,22 @@ input {
 .current-reading-profile-copy p {
   color: #5f7069;
   font-size: 0.9rem;
+}
+
+.current-reading-progress-pill {
+  margin: 0;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(20, 35, 31, 0.08);
+  color: #29473f;
+  font-size: 0.76rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .current-reading-mode-icons {
