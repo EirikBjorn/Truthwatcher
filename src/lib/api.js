@@ -272,11 +272,33 @@ export async function fetchCurrentReadingFeed() {
     throw completedCountsError
   }
 
+  const currentUserIds = [...new Set((currentRows ?? []).map((row) => row.user_id))]
+  const currentWorkIds = [...new Set((currentRows ?? []).map((row) => row.work_id))]
+  let completedCurrentRows = []
+
+  if (currentUserIds.length && currentWorkIds.length) {
+    const { data, error: completedCurrentError } = await supabase
+      .from(tables.readingChecklistItems)
+      .select('user_id, work_id')
+      .in('user_id', currentUserIds)
+      .in('work_id', currentWorkIds)
+      .eq('completed', true)
+
+    if (completedCurrentError) {
+      throw completedCurrentError
+    }
+
+    completedCurrentRows = data ?? []
+  }
+
   const currentByUserId = new Map()
   const completedCountByUserId = (completedCounts ?? []).reduce((groups, row) => {
     groups.set(row.user_id, Number(row.completed_count) || 0)
     return groups
   }, new Map())
+  const completedCurrentSet = new Set(
+    completedCurrentRows.map((row) => `${row.user_id}:${row.work_id}`),
+  )
 
   for (const row of currentRows ?? []) {
     if (!CURRENT_ENGAGEMENT_TYPES.has(row.engagement_type)) {
@@ -303,6 +325,12 @@ export async function fetchCurrentReadingFeed() {
       const primaryRow = hasReading ? readingRow : hasListening ? listeningRow : null
       const primaryWork = hasReading ? readingWork : hasListening ? listeningWork : null
       const primarySeries = primaryWork ? getWorkSeriesMeta(primaryWork) : null
+      const isReReading = Boolean(
+        hasReading && completedCurrentSet.has(`${profile.id}:${readingWork.id}`),
+      )
+      const isReListening = Boolean(
+        hasListening && completedCurrentSet.has(`${profile.id}:${listeningWork.id}`),
+      )
       const hasSharedCurrentWork =
         hasReading &&
         hasListening &&
@@ -329,6 +357,8 @@ export async function fetchCurrentReadingFeed() {
         hasCurrentActivity: hasReading || hasListening,
         isCurrentlyReading: hasReading,
         isCurrentlyListening: hasListening,
+        isReReading,
+        isReListening,
         currentMode: hasReading ? 'reading' : hasListening ? 'listening' : null,
         hasSharedCurrentWork,
         workId: primaryWork?.id ?? null,
@@ -344,6 +374,9 @@ export async function fetchCurrentReadingFeed() {
         startedAt: primaryRow?.started_at ?? null,
         latestStartedAt,
         additionalListeningBookTitle: additionalListeningWork?.title ?? '',
+        additionalListeningIsReListening: Boolean(
+          additionalListeningWork && completedCurrentSet.has(`${profile.id}:${additionalListeningWork.id}`),
+        ),
         additionalListeningStartedAt: additionalListeningWork ? listeningRow.started_at : null,
       }
     })
