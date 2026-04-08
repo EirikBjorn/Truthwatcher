@@ -102,18 +102,26 @@ function formatStartedAt(value, mode = 'reading') {
 
 function getCurrentStatus(item) {
   if (item.isCurrentlyReading) {
-    return 'Currently reading'
+    return item.isReReading ? 'Currently re-reading' : 'Currently reading'
   }
 
   if (item.isCurrentlyListening) {
-    return 'Currently listening'
+    return item.isReListening ? 'Currently re-listening' : 'Currently listening'
   }
 
   return 'Not reading right now'
 }
 
 function getCurrentKicker(item) {
-  return item.currentMode === 'listening' ? 'Current audiobook' : 'Current book'
+  if (item.currentMode === 'listening') {
+    return item.isReListening ? 'Current re-listen' : 'Current audiobook'
+  }
+
+  return item.isReReading ? 'Current re-read' : 'Current book'
+}
+
+function getAdditionalListeningLabel(item) {
+  return item.additionalListeningIsReListening ? 'Also re-listening to' : 'Also listening to'
 }
 
 function handleToggle(event) {
@@ -355,7 +363,7 @@ function setActiveTab(value) {
           </p>
 
           <div v-if="item.additionalListeningBookTitle" class="current-reading-sidecar">
-            <p class="current-reading-sidecar-label">Also listening to</p>
+            <p class="current-reading-sidecar-label">{{ getAdditionalListeningLabel(item) }}</p>
             <p class="current-reading-sidecar-title">{{ item.additionalListeningBookTitle }}</p>
             <p class="current-reading-sidecar-time">
               {{ formatStartedAt(item.additionalListeningStartedAt, 'listening') }}
