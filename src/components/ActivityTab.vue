@@ -145,7 +145,7 @@ function setActiveTab(value) {
   <section class="panel">
     <div class="section-header">
       <div>
-        <p class="eyebrow">Acticity</p>
+        <p class="eyebrow">Activity</p>
         <h2>What everyone is reading</h2>
       </div>
     </div>

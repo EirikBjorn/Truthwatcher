@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { getWorkById } from '../lib/books'
 
 const props = defineProps({
   item: {
@@ -14,12 +15,30 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  showReadingInfo: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['toggle', 'toggle-current-reading', 'toggle-current-listening'])
 
 const visibleReaders = computed(() => props.item.readers?.slice(0, 4) ?? [])
 const extraReaderCount = computed(() => Math.max((props.item.readers?.length ?? 0) - 4, 0))
+const isReadingInfoOpen = ref(false)
+const readingLabel = computed(() => props.item.readingLabel ?? '')
+const hasReadingInfo = computed(() => props.showReadingInfo && Boolean(readingLabel.value))
+const readingLabelText = computed(() => {
+  if (!readingLabel.value) {
+    return ''
+  }
+
+  return readingLabel.value.charAt(0).toUpperCase() + readingLabel.value.slice(1)
+})
+const prerequisiteTitles = computed(() =>
+  (props.item.prerequisites ?? []).map((workId) => getWorkById(workId)?.title ?? workId),
+)
+const readingInfoTitleId = computed(() => `${props.item.id}-reading-info-title`)
 
 function formatStartedLabel(value, mode) {
   if (!value) {
@@ -63,6 +82,14 @@ function handleCurrentReadingToggle() {
 function handleCurrentListeningToggle() {
   emit('toggle-current-listening', props.item.id)
 }
+
+function openReadingInfo() {
+  isReadingInfoOpen.value = true
+}
+
+function closeReadingInfo() {
+  isReadingInfoOpen.value = false
+}
 </script>
 
 <template>
@@ -71,9 +98,25 @@ function handleCurrentListeningToggle() {
     :class="[
       `series-${item.slug}`,
       item.themeSlug && `theme-${item.themeSlug}`,
-      { completed: item.completed, unreleased: !item.isReleased },
+      {
+        completed: item.completed,
+        unreleased: !item.isReleased,
+        'has-reading-info': hasReadingInfo,
+      },
     ]"
   >
+    <button
+      v-if="hasReadingInfo"
+      class="checklist-info-button"
+      :class="`reading-label-${readingLabel}`"
+      type="button"
+      :aria-label="`Show ${readingLabelText} note for ${item.title}`"
+      @click="openReadingInfo"
+    >
+      {{ readingLabelText }}
+      <img class="checklist-info-icon" src="/icons/info.png" alt="" aria-hidden="true" />
+    </button>
+
     <input
       class="checklist-checkbox"
       type="checkbox"
@@ -164,4 +207,53 @@ function handleCurrentListeningToggle() {
       </span>
     </span>
   </div>
+
+  <Teleport to="body">
+    <div
+      v-if="isReadingInfoOpen"
+      class="reading-info-backdrop"
+      role="presentation"
+      @click.self="closeReadingInfo"
+      @keydown.esc="closeReadingInfo"
+    >
+      <section
+        class="reading-info-modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="readingInfoTitleId"
+      >
+        <button
+          class="reading-info-close"
+          type="button"
+          aria-label="Close reading note"
+          autofocus
+          @click="closeReadingInfo"
+        >
+          X
+        </button>
+
+        <div class="reading-info-header">
+          <span class="reading-info-label" :class="`reading-label-${readingLabel}`">
+            {{ readingLabelText }}
+          </span>
+          <h3 :id="readingInfoTitleId">{{ item.title }}</h3>
+        </div>
+
+        <div class="reading-info-body">
+          <div>
+            <p class="reading-info-kicker">Note</p>
+            <p>{{ item.note || 'No note added yet.' }}</p>
+          </div>
+
+          <div>
+            <p class="reading-info-kicker">Prerequisites</p>
+            <ul v-if="prerequisiteTitles.length" class="reading-info-prerequisites">
+              <li v-for="title in prerequisiteTitles" :key="title">{{ title }}</li>
+            </ul>
+            <p v-else>None.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>

@@ -31,6 +31,7 @@ function buildReadingList(
 
     return {
       ...work,
+      readingLabel: work.label,
       ...getWorkSeriesMeta(work),
       isReleased,
       completed: isReleased && completedSet.has(work.id),

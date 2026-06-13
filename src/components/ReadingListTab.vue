@@ -93,6 +93,7 @@ function handleToggleCurrentListening(bookId) {
             :item="book"
             :meta="book.meta"
             :disabled="!isSignedIn"
+            :show-reading-info="activeChecklistTab === 'eirik'"
             @toggle="handleToggleBook"
             @toggle-current-reading="handleToggleCurrentReading"
             @toggle-current-listening="handleToggleCurrentListening"
