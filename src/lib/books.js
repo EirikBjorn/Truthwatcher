@@ -28,6 +28,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Apr 21, 2005',
     eirikOrder: 7,
     durationLabel: '~13.5 hours',
+    label: 'optional',
+    note: 'This is a standalone novel, it is fun to know this book while reading later books, but not required.',
+    prerequisites: [],
   },
   {
     id: 'the-hope-of-elantris',
@@ -38,6 +41,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jan 2006',
     eirikOrder: 8,
     durationLabel: '~0.5 hours',
+    label: 'optional',
+    note: 'This is a standalone short story, it is fun to know this story while reading later books, but not required.',
+    prerequisites: ['elantris'],
   },
   {
     id: 'mistborn-final-empire',
@@ -48,6 +54,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jul 17, 2006',
     eirikOrder: 1,
     durationLabel: '~14.5 hours',
+    label: 'required',
+    note: 'First book in the mistborn series',
+    prerequisites: [],
   },
   {
     id: 'mistborn-well-of-ascension',
@@ -58,6 +67,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Aug 21, 2007',
     eirikOrder: 2,
     durationLabel: '~16.5 hours',
+    label: 'required',
+    note: 'Second book in the mistborn series',
+    prerequisites: ['mistborn-final-empire'],
   },
   {
     id: 'mistborn-hero-of-ages',
@@ -68,6 +80,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Oct 14, 2008',
     eirikOrder: 3,
     durationLabel: '~15.5 hours',
+    label: 'required',
+    note: 'Third book in the mistborn series',
+    prerequisites: ['mistborn-final-empire', 'mistborn-well-of-ascension'],
   },
   {
     id: 'warbreaker',
@@ -78,6 +93,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jun 9, 2009',
     eirikOrder: 6,
     durationLabel: '~13.5 hours',
+    label: 'recommended',
+    note: 'Standalone novel, but has VERY cool connections to the Stormlight Archive series. Highly recommended to read before Stormlight, especially the second book.',
+    prerequisites: [],
   },
   {
     id: 'stormlight-way-of-kings',
@@ -88,6 +106,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Aug 31, 2010',
     eirikOrder: 11,
     durationLabel: '~25.5 hours',
+    label: 'required',
+    note: 'First book in the Stormlight Archive series',
+    prerequisites: [],
   },
   {
     id: 'mistborn-alloy-of-law',
@@ -98,6 +119,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 8, 2011',
     eirikOrder: 18,
     durationLabel: '~6.5 hours',
+    label: 'required',
+    note: 'First book in the Mistborn Era 2 series. Set 300 years after the original Mistborn trilogy.',
+    prerequisites: ['mistborn-final-empire', 'mistborn-well-of-ascension', 'mistborn-hero-of-ages'],
   },
   {
     id: 'the-eleventh-metal',
@@ -108,6 +132,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Dec 16, 2011',
     eirikOrder: 4,
     durationLabel: '~1 hour',
+    label: 'optional',
+    note: 'This is a standalone short stor.',
+    prerequisites: ['mistborn-final-empire', 'mistborn-well-of-ascension', 'mistborn-hero-of-ages'],
   },
   {
     id: 'emperors-soul',
@@ -118,6 +145,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Oct 11, 2012',
     eirikOrder: 9,
     durationLabel: '~2 hours',
+    label: 'required',
+    note: 'Highly recommended to read before the fourth Mistborn Era 2 book, The Lost Metal. This is a standalone story, but it is set in the same world as Elantris and has some connections to the magic system.',
+    prerequisites: [],
   },
   {
     id: 'shadows-for-silence',
@@ -128,6 +158,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Dec 3, 2013',
     eirikOrder: 23,
     durationLabel: '~1.5 hours',
+    label: 'optional',
+    note: 'This is a standalone story, but should be read before The Sunlit Man',
+    prerequisites: [],
   },
   {
     id: 'stormlight-words-of-radiance',
@@ -138,6 +171,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Mar 4, 2014',
     eirikOrder: 12,
     durationLabel: '~26.5 hours',
+    label: 'required',
+    note: 'Second book in the Stormlight Archive series',
+    prerequisites: ['stormlight-way-of-kings'],
   },
   {
     id: 'sixth-of-the-dusk',
@@ -148,6 +184,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jul 1, 2014',
     eirikOrder: 25,
     durationLabel: '~1.5 hours',
+    label: 'optional',
+    note: 'This is a standalone story, but should be read before Isles of the Emberdark',
+    prerequisites: [],
   },
   {
     id: 'allomancer-jak',
@@ -158,6 +197,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Aug 7, 2014',
     eirikOrder: 19,
     durationLabel: '~1.5 hours',
+    label: 'optional',
+    note: 'Fun little in world story, but not required to read before any other books. It is set in the same world as Mistborn, but is not part of the main series.',
+    prerequisites: [],
   },
   {
     id: 'mistborn-shadows-of-self',
@@ -168,6 +210,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Oct 6, 2015',
     eirikOrder: 20,
     durationLabel: '~7.5 hours',
+    label: 'required',
+    note: 'Second book in the Mistborn Era 2 series.',
+    prerequisites: ['mistborn-alloy-of-law'],
   },
   {
     id: 'mistborn-bands-of-mourning',
@@ -178,6 +223,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jan 26, 2016',
     eirikOrder: 21,
     durationLabel: '~8.5 hours',
+    label: 'required',
+    note: 'Third book in the Mistborn Era 2 series.',
+    prerequisites: ['mistborn-alloy-of-law', 'mistborn-shadows-of-self'],
   },
   {
     id: 'mistborn-secret-history',
@@ -188,6 +236,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jan 26, 2016',
     eirikOrder: 5,
     durationLabel: '~3.5 hours',
+    label: 'required',
+    note: 'This is a standalone novella, following the Mistborn Trilogy from a different perspective. Should be read directly after the original Mistborn trilogy.',
+    prerequisites: ['mistborn-final-empire', 'mistborn-well-of-ascension', 'mistborn-hero-of-ages'],
   },
   {
     id: 'stormlight-edgedancer',
@@ -198,6 +249,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 22, 2016',
     eirikOrder: 13,
     durationLabel: '~2.5 hours',
+    label: 'optional',
+    note: 'Optional, but highly recommended to read before Oathbringer.',
+    prerequisites: ['stormlight-way-of-kings', 'stormlight-words-of-radiance'],
   },
   {
     id: 'stormlight-oathbringer',
@@ -208,6 +262,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 14, 2017',
     eirikOrder: 14,
     durationLabel: '~30.5 hours',
+    label: 'required',
+    note: 'Third book in the Stormlight Archive series.',
+    prerequisites: ['stormlight-way-of-kings', 'stormlight-words-of-radiance', 'stormlight-edgedancer'],
   },
   {
     id: 'stormlight-dawnshard',
@@ -218,6 +275,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 5, 2020',
     eirikOrder: 15,
     durationLabel: '~3.5 hours',
+    label: 'optional',
+    note: 'Optional novella, recommended to read before Rhythm of War.',
+    prerequisites: ['stormlight-way-of-kings', 'stormlight-words-of-radiance', 'stormlight-oathbringer'],
   },
   {
     id: 'stormlight-rhythm-of-war',
@@ -228,6 +288,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 17, 2020',
     eirikOrder: 16,
     durationLabel: '~30.5 hours',
+    label: 'required',
+    note: 'Fourth book in the Stormlight Archive series. You will notice some extra references if you have read Elantris, Warbreaker, and Dawnshard, but it is not required to read those before Rhythm of War.',
+    prerequisites: ['stormlight-way-of-kings', 'stormlight-words-of-radiance', 'stormlight-oathbringer', 'stormlight-dawnshard'],
   },
   {
     id: 'mistborn-lost-metal',
@@ -238,6 +301,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Nov 15, 2022',
     eirikOrder: 22,
     durationLabel: '~10 hours',
+    label: 'required',
+    note: 'Fourth book in the Mistborn Era 2 series. This is the final book in the Mistborn Era 2 series. You will notice cool details and extra references to Elantris',
+    prerequisites: ['mistborn-alloy-of-law', 'mistborn-shadows-of-self', 'mistborn-bands-of-mourning'],
   },
   {
     id: 'white-sand-omnibus',
@@ -248,6 +314,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Dec 16, 2022',
     eirikOrder: 10,
     durationLabel: '~5 hours',
+    label: 'optional',
+    note: 'Optional graphic novel, backstory of Khriss, the person writing the Ars Arcanum with details on the magic system at the end of each book.',
+    prerequisites: [],
   },
   {
     id: 'tress',
@@ -258,6 +327,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jan 1, 2023',
     eirikOrder: 26,
     durationLabel: '~7.5 hours',
+    label: 'optional',
+    note: 'Standalone novel.',
+    prerequisites: [],
   },
   {
     id: 'yumi',
@@ -268,6 +340,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jul 1, 2023',
     eirikOrder: 27,
     durationLabel: '~9 hours',
+    label: 'optional',
+    note: 'Standalone novel.',
+    prerequisites: [],
   },
   {
     id: 'sunlit-man',
@@ -278,6 +353,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Oct 1, 2023',
     eirikOrder: 24,
     durationLabel: '~7.5 hours',
+    label: 'optional',
+    note: 'Standalone novel, following an important character you will know from earlier books',
+    prerequisites: [],
   },
   {
     id: 'stormlight-wind-and-truth',
@@ -288,6 +366,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Dec 6, 2024',
     eirikOrder: 17,
     durationLabel: '~33 hours',
+    label: 'required',
+    note: 'Fifth book in the Stormlight Archive series. You will notice some extra references if you have read Elantris, Warbreaker, and Dawnshard, but it is not required to read those before Wind and Truth.',
+    prerequisites: ['stormlight-way-of-kings', 'stormlight-words-of-radiance', 'stormlight-oathbringer', 'stormlight-dawnshard', 'stormlight-rhythm-of-war']
   },
   {
     id: 'isles-of-the-emberdark',
@@ -298,6 +379,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Jul 1, 2025',
     eirikOrder: 28,
     durationLabel: '~8 hours',
+    label: 'optional',
+    note: 'Standalone novel.',
+    prerequisites: [],
   },
   {
     id: 'fires-of-december',
@@ -308,6 +392,9 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Dec 8, 2026',
     eirikOrder: 29,
     durationLabel: 'Unknown',
+    label: 'optional',
+    note: 'Standalone novel.',
+    prerequisites: [],
     isReleased: false,
   },
 ]

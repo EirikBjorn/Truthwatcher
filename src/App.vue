@@ -51,7 +51,7 @@ const selectedProfileSnapshot = ref(null)
 const appTabs = [
   { id: 'home', label: 'Home' },
   { id: 'list', label: 'List' },
-  { id: 'activity', label: 'Acticity' },
+  { id: 'activity', label: 'Activity' },
   { id: 'tracker', label: 'Tracker' },
 ]
 
