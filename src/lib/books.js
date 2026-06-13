@@ -145,7 +145,7 @@ export const COSMERE_WORKS = [
     releaseDateLabel: 'Oct 11, 2012',
     eirikOrder: 9,
     durationLabel: '~2 hours',
-    label: 'required',
+    label: 'recommended',
     note: 'Highly recommended to read before the fourth Mistborn Era 2 book, The Lost Metal. This is a standalone story, but it is set in the same world as Elantris and has some connections to the magic system.',
     prerequisites: [],
   },
