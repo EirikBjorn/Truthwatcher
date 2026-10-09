@@ -34,6 +34,7 @@ const loading = ref(true)
 const errorMessage = ref('')
 const authLoading = ref(true)
 const authBusy = ref(false)
+const publicationToggleBusy = ref(false)
 const currentUser = ref(null)
 const checklistTabStorageKey = `${storageKeyPrefix}.checklistTab`
 const notificationPermission = ref(
@@ -60,6 +61,7 @@ const unreleasedBooks = computed(() => readingList.value.filter((item) => item.i
 const completedBooks = computed(() =>
   releasedReadingList.value.filter((item) => item.completed).length,
 )
+const completedWorkIds = computed(() => readingList.value.filter((item) => item.completed).map((item) => item.id))
 const cosmereProgress = computed(() => calculateCosmereProgress(readingList.value))
 const isSignedIn = computed(() => Boolean(currentUser.value))
 const currentUserName = computed(() => {
@@ -82,13 +84,21 @@ const currentUserInitial = computed(() => currentUserName.value.trim().charAt(0)
 const activeNavTab = computed(() =>
   activeAppTab.value === 'profile' ? previousAppTab.value : activeAppTab.value,
 )
+const selectedProfileIsOwn = computed(() =>
+  Boolean(currentUser.value?.id && selectedProfileSnapshot.value?.profile?.id === currentUser.value.id),
+)
+const selectedProfileCompletedWorkIds = computed(() =>
+  selectedProfileIsOwn.value
+    ? completedWorkIds.value
+    : (selectedProfileSnapshot.value?.completedWorkIds ?? []),
+)
 const selectedProfileProgress = computed(() => {
-  const completedWorkIds = new Set(selectedProfileSnapshot.value?.completedWorkIds ?? [])
+  const completedIds = new Set(selectedProfileCompletedWorkIds.value)
 
   return calculateCosmereProgress(
     COSMERE_WORKS.map((work) => ({
       ...work,
-      completed: completedWorkIds.has(work.id),
+      completed: completedIds.has(work.id),
     })),
   )
 })
@@ -416,6 +426,23 @@ async function toggleBook(id) {
   await loadCurrentReadingItems(currentUser.value)
 }
 
+async function togglePublicationBook(id) {
+  if (publicationToggleBusy.value) {
+    return
+  }
+
+  publicationToggleBusy.value = true
+
+  try {
+    errorMessage.value = ''
+    await toggleBook(id)
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    publicationToggleBusy.value = false
+  }
+}
+
 async function toggleCurrentReading(id) {
   const existingItem = readingList.value.find((item) => item.id === id)
 
@@ -540,9 +567,12 @@ watch(activeChecklistTab, (value) => {
       :auth-loading="authLoading"
       :notification-permission="notificationPermission"
       :cosmere-progress="cosmereProgress"
+      :completed-work-ids="completedWorkIds"
+      :toggle-busy="publicationToggleBusy"
       @sign-in="startGoogleSignIn"
       @sign-out="handleSignOut"
       @enable-notifications="enableNotifications"
+      @toggle-book="togglePublicationBook"
     />
 
     <ReadingListTab
@@ -580,7 +610,11 @@ watch(activeChecklistTab, (value) => {
       :cosmere-progress="selectedProfileProgress"
       :current-reading="selectedProfileSnapshot?.currentReading ?? null"
       :current-listening="selectedProfileSnapshot?.currentListening ?? null"
+      :completed-work-ids="selectedProfileCompletedWorkIds"
+      :is-own-profile="selectedProfileIsOwn"
+      :toggle-busy="publicationToggleBusy"
       @back="closeProfile"
+      @toggle-book="togglePublicationBook"
     />
 
     <TrackerTab

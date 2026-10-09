@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import PublicationProgressList from './PublicationProgressList.vue'
 
 const props = defineProps({
   loading: {
@@ -22,9 +23,21 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  completedWorkIds: {
+    type: Array,
+    default: () => [],
+  },
+  isOwnProfile: {
+    type: Boolean,
+    default: false,
+  },
+  toggleBusy: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['back'])
+const emit = defineEmits(['back', 'toggle-book'])
 
 const progressCircumference = 2 * Math.PI * 52
 const progressDashOffset = computed(
@@ -223,6 +236,13 @@ function handleBack() {
             </div>
           </section>
         </div>
+
+      <PublicationProgressList
+        :completed-work-ids="completedWorkIds"
+        :can-toggle="isOwnProfile"
+        :busy="toggleBusy"
+        @toggle-book="emit('toggle-book', $event)"
+      />
     </section>
 
     <section v-else class="panel">
