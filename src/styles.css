@@ -1283,6 +1283,103 @@ input {
   border: 1px solid rgba(20, 35, 31, 0.08);
 }
 
+.publication-progress-card {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid rgba(20, 35, 31, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.publication-progress-list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.publication-progress-row {
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr) 1.4rem;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(20, 35, 31, 0.035);
+  border-radius: 0.55rem;
+  background: #f1f2ef;
+  color: #6a7670;
+}
+
+.publication-progress-row-complete {
+  border-color: rgba(62, 111, 78, 0.13);
+  background: #fff;
+  color: #1b2b27;
+}
+
+.publication-progress-row-interactive {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.publication-progress-row-interactive:hover:not(:disabled) {
+  border-color: rgba(62, 111, 78, 0.35);
+}
+
+.publication-progress-row-interactive:focus-visible {
+  outline: 2px solid #355f53;
+  outline-offset: 2px;
+}
+
+.publication-progress-row-interactive:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.publication-progress-number {
+  color: #86928b;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.publication-progress-row-complete .publication-progress-number {
+  color: #527265;
+}
+
+.publication-progress-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.89rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.publication-progress-status {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1px solid #d2d9d3;
+  border-radius: 50%;
+  color: #929d96;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.publication-progress-row-complete .publication-progress-status {
+  border-color: #c7dec9;
+  background: #dfeee1;
+  color: #245c3b;
+}
+
 .profile-page {
   display: grid;
   gap: 1rem;

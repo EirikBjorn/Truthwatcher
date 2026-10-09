@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import PublicationProgressList from './PublicationProgressList.vue'
 
 const props = defineProps({
   isSignedIn: {
@@ -38,9 +39,17 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  completedWorkIds: {
+    type: Array,
+    default: () => [],
+  },
+  toggleBusy: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['sign-in', 'sign-out', 'enable-notifications'])
+const emit = defineEmits(['sign-in', 'sign-out', 'enable-notifications', 'toggle-book'])
 
 const progressCircumference = 2 * Math.PI * 52
 const progressDashOffset = computed(
@@ -184,6 +193,14 @@ function handleEnableNotifications() {
           {{ authLoading ? 'Checking session…' : authBusy ? 'Redirecting…' : 'Sign in with Google' }}
         </button>
       </div>
+
+      <PublicationProgressList
+        v-if="isSignedIn"
+        :completed-work-ids="completedWorkIds"
+        :can-toggle="true"
+        :busy="toggleBusy"
+        @toggle-book="emit('toggle-book', $event)"
+      />
     </div>
   </section>
 </template>
